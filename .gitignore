@@ -1,0 +1,19 @@
+# Environnements et dépendances
+backend/venv/
+frontend/node_modules/
+frontend/.angular/
+frontend/dist/
+__pycache__/
+*.pyc
+.vscode/
+# Secrets et variables d'environnement
+.env
+secrets/
+
+# Backups, scripts et snapshots personnels
+admin/
+*.log
+
+# OS et éditeurs
+.DS_Store
+Thumbs.db
