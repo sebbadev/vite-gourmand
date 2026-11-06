@@ -252,6 +252,7 @@ sequenceDiagram
     participant Front as Interface Back-office
     participant API as Serveur API
     participant BDD as Base de Données (PostgreSQL)
+    participant Mongo as Base NoSQL (MongoDB)
     participant Mail as Service Email
 
     Client ->> Employe: Déposer le matériel prêté (référence commande)
@@ -270,7 +271,12 @@ sequenceDiagram
         %% Évaluation de la clôture complète
         opt Commande livrée et totalement réglée
             API ->> BDD: MajStatutCommande(id, statut='Terminée')
-            Note over API, BDD: Commande définitivement soldée et clôturée
+            Note over API, BDD: Commande soldée dans PostgreSQL
+            
+            %% SYNCHRONISATION ANALYTIQUE VERS MONGODB
+            API ->> Mongo: insertOne(document_commande_terminee)
+            Note over API, Mongo: Synchronisation dénormalisée pour stats Admin
+            Mongo -->> API: Acknowledged (insertedId)
         end
 
         API ->> Mail: EnvoyerAccuseRestitutionConforme(client_email)
