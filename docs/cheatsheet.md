@@ -21,6 +21,12 @@
 * `mkdir -p dossier1/dossier2` : Créer des dossiers imbriqués sans erreur.
 * `touch nom_fichier.md` : Créer un fichier vide.
 * `clear` (ou `Ctrl + L`) : Nettoyer l'affichage de la console.
+* ctrl+C : annuler la saisie
+* ctrl+U : effacer tout ce qui se trouve à gauche du curseur sur la ligne courante
+* ctrl+A (ou home) : aller au début de la ligne
+* ctrl+E (ou fin)  : aller au bout de la ligne
+* alt+f ou ctrl+right-arrow : mot par mot à droite
+* alt+b ou ctrl+left-arrow : mot par mot à gauche
 
 ### Exécution de scripts `.sh`
 
