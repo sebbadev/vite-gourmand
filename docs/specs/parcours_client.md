@@ -1,18 +1,20 @@
-Parcours Utilisateur (Client connecté) — Spécifications & Séquences
-L'acteur Client hérite des parcours publics documentés dans parcours-visiteur.md.
+# Parcours Utilisateur (Client connecté) — Spécifications & Séquences
 
-=========================================================================================================
-Parcours 1 : Se connecter (Authentification)
-=========================================================================================================
-1. Règles et données métier
+> L'acteur Client hérite des parcours publics documentés dans `parcours-visiteur.md`.
 
--   Identifiants requis : Email et mot de passe.
--   Mécanisme : Vérification de l'existence du compte, comparaison sécurisée de l'empreinte (bcrypt / Argon2).
--   Gestion de session : Génération d'un jeton d'accès sécurisé (JWT - JSON Web Token).
--   Sécurité : Message générique en cas d'erreur ("Identifiants invalides") pour empêcher l'énumération de 
-    comptes.
+---
 
-2. Diagramme de séquence Mermaid
+## Parcours 1 : Se connecter (Authentification)
+
+### 1. Règles et données métier
+
+* **Identifiants requis :** Email et mot de passe.
+* **Mécanisme :** Vérification de l'existence du compte, comparaison sécurisée de l'empreinte (bcrypt / Argon2).
+* **Gestion de session :** Génération d'un jeton d'accès sécurisé (JWT - JSON Web Token).
+* **Sécurité :** Message générique en cas d'erreur (*"Identifiants invalides"*) pour empêcher l'énumération de comptes.
+
+### 2. Diagramme de séquence Mermaid
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -39,17 +41,20 @@ sequenceDiagram
         API -->> Front: 401 Unauthorized ("Identifiants invalides")
         Front -->> Client: Afficher message d'erreur générique
     end
+
 ```
-=========================================================================================================
-Parcours 2 : Réinitialiser son mot de passe
-=========================================================================================================
-1. Règles et données métier
 
--   Sécurité anti-énumération : Réponse 200 OK systématique côté API.
--   Jeton de réinitialisation (Reset Token) à usage unique, durée de vie courte (15 min), stocké sous forme 
-    empreinte hachée.
+---
 
-2. Diagramme de séquence Mermaid
+## Parcours 2 : Réinitialiser son mot de passe
+
+### 1. Règles et données métier
+
+* **Sécurité anti-énumération :** Réponse HTTP 200 OK systématique côté API.
+* **Jeton de réinitialisation (Reset Token) :** À usage unique, durée de vie courte (15 minutes), stocké sous forme d'empreinte hachée.
+
+### 2. Diagramme de séquence Mermaid
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -102,16 +107,20 @@ sequenceDiagram
         Front -->> Client: Afficher message d'erreur et proposer une nouvelle demande
     end
     end
+
 ```
-=========================================================================================================
-Parcours 3 : Passer commande et payer sa commande
-=========================================================================================================
-1. Règles et données métier
 
--   Gestion découplée des 3 statuts : statut_commande, statut_paiement, statut_materiel.
--   Clôture finale (TERMINEE) uniquement si : LIVREE + PAYEE + RESTITUEE.
+---
 
-2. Diagramme de séquence Mermaid
+## Parcours 3 : Passer commande et régler sa commande
+
+### 1. Règles et données métier
+
+* **Gestion découplée des 3 statuts :** `statut_commande`, `statut_paiement`, `statut_materiel`.
+* **Clôture finale (`TERMINÉE`) conditionnelle :** Uniquement si `LIVRÉE` + `RÉGLÉE` + `RETOURNÉ` (ou matériel non inclus).
+
+### 2. Diagramme de séquence Mermaid
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -205,17 +214,20 @@ sequenceDiagram
         API ->> Mail: EnvoyerNotificationPenalite(client_email, id, montant: "600€")
     end
     end
+
 ```
-=========================================================================================================
-Parcours 4 : Suivre l'état de sa commande
-=========================================================================================================
-1. Règles et données métier
 
--   Contrôle d'accès : Accès strictement réservé au propriétaire de la commande.
--   Visualisation : Frise chronologique horodatée permettant de suivre l'avancement de la préparation, de la 
-    livraison et du statut du matérie
+---
 
-2. Diagramme de séquence Mermaid
+## Parcours 4 : Suivre l'état de sa commande
+
+### 1. Règles et données métier
+
+* **Contrôle d'accès :** Accès strictement réservé au propriétaire de la commande (`user_id`).
+* **Visualisation :** Frise chronologique horodatée permettant de suivre l'avancement de la préparation, de la livraison et du statut du matériel.
+
+### 2. Diagramme de séquence Mermaid
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -250,18 +262,21 @@ sequenceDiagram
             Note over Front, Client: Bouton d'action actif : "Payer ma commande en ligne"
         end
     end
+
 ```
-=========================================================================================================
-Parcours 5 : Restituer son matériel emprunté
-=========================================================================================================
-1. Règles et données métier
 
--   Délai maximal : 10 jours ouvrés / calendaires.
--   Notification de rappel de paiement : si le matériel est restitué mais que le règlement n'est pas encore 
-    soldé, un email de rappel de paiement dû est envoyé au client.
--   Pénalité forfaitaire de 600 € si non restitué ou détérioré.
+---
 
-2. Diagramme de séquence Mermaid
+## Parcours 5 : Restituer son matériel emprunté
+
+### 1. Règles et données métier
+
+* **Délai maximal :** 10 jours ouvrés / calendaires.
+* **Notification de rappel de paiement :** Si le matériel est restitué mais que le règlement n'est pas soldé, un email de rappel de paiement dû est envoyé au client.
+* **Pénalité forfaitaire :** 600 € appliqués si le matériel est non restitué ou détérioré.
+
+### 2. Diagramme de séquence Mermaid
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -305,19 +320,21 @@ sequenceDiagram
         API -->> FrontResto: 200 OK ("Dossier basculé en litige / pénalité")
         FrontResto -->> Resto: Alerte "Dossier pénalité généré"
     end
+
 ```
-=========================================================================================================
-Parcours 6 : Voir l'historique des commandes
-=========================================================================================================
-1. Règles et données métier
 
--   Pagination côté serveur (server-side pagination) : Paramètres limit et page.
--   Émission de facture PDF (Portable Document Format) : Disponible dès que la commande est au statut LIVRÉE (
-    avec mention légale "À RÉGLER" ou "ACQUITTÉE").
--   Annulation autonome par le client (customer cancellation) : Autorisée uniquement tant que le statut de la 
-    commande est En attente de validation (avant acceptation par le restaurant).
+---
 
-2. Diagramme de séquence Mermaid
+## Parcours 6 : Voir l'historique des commandes
+
+### 1. Règles et données métier
+
+* **Pagination côté serveur :** Paramètres `limit` et `page` requis.
+* **Émission de facture PDF :** Accessible dès que la commande passe au statut `LIVRÉE` (avec mention légale *"À RÉGLER"* ou *"ACQUITTÉE"*).
+* **Annulation autonome par le client :** Autorisée uniquement tant que le statut de la commande est `En attente de validation`.
+
+### 2. Diagramme de séquence Mermaid
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -386,17 +403,21 @@ sequenceDiagram
             Front -->> Client: Alerte ("Veuillez contacter le restaurant pour toute annulation")
         end
     end
+
 ```
-=========================================================================================================
-Parcours 7 : Modifier les informations de son compte
-=========================================================================================================
-1. Règles et données métier
 
--   Authentification requise (Bearer Token).
--   Cas A : Coordonnées personnelles (nom, prénom, téléphone, adresse).
--   Cas B : Sécurité (changement de mot de passe avec validation de l'ancien mot de passe).
+---
 
-2. Diagramme de séquence Mermaid
+## Parcours 7 : Modifier les informations de son compte
+
+### 1. Règles et données métier
+
+* **Authentification requise :** Header `Authorization: Bearer <Token>`.
+* **Cas A :** Coordonnées personnelles (nom, prénom, téléphone, adresse).
+* **Cas B :** Sécurité (changement de mot de passe avec validation préalable de l'ancien mot de passe).
+
+### 2. Diagramme de séquence Mermaid
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -422,7 +443,7 @@ sequenceDiagram
         API ->> BDD: MettreAJourCoordonnees(userId, payload)
         BDD -->> API: ProfilMisAJour
         API -->> Front: 200 OK (profil actualisé)
-        Front -->> Client: Afficher confirmation verte ("Coordonnées mises à jour")
+        Front -->> Client: Afficher confirmation ("Coordonnées mises à jour")
 
     %% 3. Cas B : Modification du mot de passe
     else Cas B : Modification du mot de passe
@@ -442,24 +463,25 @@ sequenceDiagram
             Front -->> Client: Afficher confirmation de sécurité
         else Ancien mot de passe erroné
             API -->> Front: 400 Bad Request ("Le mot de passe actuel est incorrect")
-            Front -->> Client: Afficher message d'erreur rouge
+            Front -->> Client: Afficher message d'erreur
         end
     end
+
 ```
-=========================================================================================================
- Parcours 8 : Déposer un avis suite à une commande terminée
-=========================================================================================================
-1. Règles et données métier
 
--   Condition d'accès : La commande doit être au statut Terminée (OrderStatus.COMPLETED).
--   Architecture polyglotte : La vérification de la commande s'effectue sur la BDD relationnelle (PostgreSQL), 
-    tandis que la persistance de l'avis s'effectue dans une collection de documents NoSQL (MongoDB).
--   Évaluation multicritère : Notes (1 à 5 étoiles / Enum notes) sur la qualité, le service, le prix, et 
-    commentaire descriptif.
--   Statut initial : L'avis est créé avec le statut En attente (ReviewStatus.PENDING), invisible publiquement 
-    tant qu'il n'est pas modéré par l'équipe.
+---
 
-2. Diagramme de séquence Mermaid
+## Parcours 8 : Déposer un avis suite à une commande terminée
+
+### 1. Règles et données métier
+
+* **Condition d'accès :** La commande doit obligatoirement être au statut `Terminée` (`OrderStatus.TERMINEE`).
+* **Architecture polyglotte :** Le contrôle d'éligibilité s'effectue sur la base relationnelle (PostgreSQL), tandis que la persistance de l'avis s'effectue dans une collection NoSQL (MongoDB).
+* **Évaluation multicritère :** Notes sur la qualité, le service, le prix (1 à 5 / type enum `Rating`), complétées par un commentaire descriptif.
+* **Statut initial :** L'avis est inséré avec le statut `En attente` (`ReviewStatus.EN_ATTENTE`), invisible sur la vitrine publique tant qu'il n'est pas validé par un employé ou l'administrateur.
+
+### 2. Diagramme de séquence Mermaid
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -489,4 +511,5 @@ sequenceDiagram
 
     API -->> Front: 201 Created ("Avis soumis pour modération")
     Front -->> Client: Notification succès ("Merci ! Votre avis sera publié après validation.")
+
 ```
