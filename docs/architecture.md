@@ -10,6 +10,7 @@ vite-et-gourmand/
 ├── mon-projet.sublime-project      # Configuration de l'espace de travail Sublime Text
 │
 ├── docs/                           # Référentiel documentaire (Source of Truth)
+
 │   ├── architecture.md             # Justification stack, flux et arborescence globale
 │   ├── backlog.md                  # Carnet produit (Phases P0 à P7) et traçabilité
 │   ├── conventions.md              # Normes de commit, gestion des branches et workflow
@@ -102,45 +103,45 @@ vite-et-gourmand/
     ├── tsconfig.json               # Options de compilation TypeScript
     │
     ├── src/
-    │   ├── index.html              # Page hôte unique (SPA)
-    │   ├── main.ts                 # Bootstrap de l'application Angular
-    │   ├── styles.scss             # Variables globales SCSS (charte Vite & Gourmand)
-    │   │
-    │   ├── assets/                 # Ressources statiques publiques
-    │   │   ├── images/             # Logos, bannières, illustrations
-    │   │   └── icons/              # Icônes SVG accessibles
-    │   │
-    │   └── app/
-    │       ├── app.routes.ts       # Table de routage principale (Lazy loading)
-    │       ├── app.config.ts       # Fournisseurs d'injection (HttpClient, Interceptors)
-    │       │
-    │       ├── core/               # Services singleton et sécurité globale
-    │       │   ├── guards/
-    │       │   │   ├── auth.guard.ts         # Protection connexion requise
-    │       │   │   └── role.guard.ts         # Cloisonnement RBAC (/admin, /collaborateur)
-    │       │   ├── interceptors/
-    │       │   │   ├── jwt.interceptor.ts    # Injection automatique du Bearer Token
-    │       │   │   └── error.interceptor.ts  # Capture globale des erreurs HTTP (401, 500)
-    │       │   └── services/
-    │       │       ├── auth.service.ts       # Gestion login/logout et session utilisateur
-    │       │       └── storage.service.ts    # Abstraction du localStorage
-    │       │
-    │       ├── shared/             # Composants et pipes réutilisables
-    │       │   ├── components/
-    │       │   │   ├── navbar/               # En-tête responsive adaptatif selon le rôle
-    │       │   │   ├── footer/               # Pied de page (horaires, CGV, RGPD)
-    │       │   │   └── alert-modal/          # Modales d'alerte et de confirmation
-    │       │   └── pipes/
-    │       │       ├── price.pipe.ts         # Formatage monétaire en euros
-    │       │       └── order-status.pipe.ts  # Traduction et badges couleur des statuts
-    │       │
-    │       └── features/           # Modules métier autonomes
-    │           ├── home/                     # Page d'accueil (vitrine, avis approuvés)
-    │           ├── catalog/                  # Catalogue menus et filtres en temps réel
-    │           │   ├── catalog-list/
-    │           │   ├── catalog-filter/
-    │           │   └── menu-detail/
-    │           ├── cart-checkout/            # Panier et tunnel de commande
-    │           ├── client-space/             # Espace client (suivi horodaté, factures PDF)
-    │           ├── employee-space/           # Dashboard collaborateur (commandes, catalogue)
-    │           └── admin-space/              # Dashboard direction (analytics NoSQL, personnel)
+        ├── index.html              # Page hôte unique (SPA)
+        ├── main.ts                 # Bootstrap de l'application Angular
+        ├── styles.scss             # Variables globales SCSS (charte Vite & Gourmand)
+        │
+        ├── assets/                 # Ressources statiques publiques
+        │   ├── images/             # Logos, bannières, illustrations
+        │   └── icons/              # Icônes SVG accessibles
+        │
+        └── app/
+            ├── app.routes.ts       # Table de routage principale (Lazy loading)
+            ├── app.config.ts       # Fournisseurs d'injection (HttpClient, Interceptors)
+            │
+            ├── core/               # Services singleton et sécurité globale
+            │   ├── guards/
+            │   │   ├── auth.guard.ts         # Protection connexion requise
+            │   │   └── role.guard.ts         # Cloisonnement RBAC (/admin, /collaborateur)
+            │   ├── interceptors/
+            │   │   ├── jwt.interceptor.ts    # Injection automatique du Bearer Token
+            │   │   └── error.interceptor.ts  # Capture globale des erreurs HTTP (401, 500)
+            │   └── services/
+            │       ├── auth.service.ts       # Gestion login/logout et session utilisateur
+            │       └── storage.service.ts    # Abstraction du localStorage
+            │
+            ├── shared/             # Composants et pipes réutilisables
+            │   ├── components/
+            │   │   ├── navbar/               # En-tête responsive adaptatif selon le rôle
+            │   │   ├── footer/               # Pied de page (horaires, CGV, RGPD)
+            │   │   └── alert-modal/          # Modales d'alerte et de confirmation
+            │   └── pipes/
+            │       ├── price.pipe.ts         # Formatage monétaire en euros
+            │       └── order-status.pipe.ts  # Traduction et badges couleur des statuts
+            │
+            └── features/           # Modules métier autonomes
+                ├── home/                     # Page d'accueil (vitrine, avis approuvés)
+                ├── catalog/                  # Catalogue menus et filtres en temps réel
+                │   ├── catalog-list/
+                │   ├── catalog-filter/
+                │   └── menu-detail/
+                ├── cart-checkout/            # Panier et tunnel de commande
+                ├── client-space/             # Espace client (suivi horodaté, factures PDF)
+                ├── employee-space/           # Dashboard collaborateur (commandes, catalogue)
+                └── admin-space/              # Dashboard direction (analytics NoSQL, personnel)
