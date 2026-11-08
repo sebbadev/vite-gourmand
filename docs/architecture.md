@@ -10,6 +10,7 @@ vite-et-gourmand/
 ├── mon-projet.sublime-project      # Configuration de l'espace de travail Sublime Text
 │
 ├── docs/                           # Référentiel documentaire (Source of Truth)
+
 │   ├── architecture.md             # Justification stack, flux et arborescence globale
 │   ├── backlog.md                  # Carnet produit (Phases P0 à P7) et traçabilité
 │   ├── conventions.md              # Normes de commit, gestion des branches et workflow
