@@ -1,12 +1,23 @@
 # Environnements et dépendances
 backend/venv/
+venv/
+ENV/
+env/
 frontend/node_modules/
 frontend/.angular/
 frontend/dist/
+
+# Fichiers compilés et cache Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
 *.pyc
 .vscode/
+
 # Secrets et variables d'environnement
+backend/.env
 .env
 secrets/
 
