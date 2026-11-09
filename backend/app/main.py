@@ -1,33 +1,56 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from app.core.config import settings
+from app.core.database import get_db, get_mongo_db
 
 app = FastAPI(
-    title="Vite & Gourmand API",
+    title=settings.PROJECT_NAME,
     description="API RESTful traiteur événementiel (FastAPI, PostgreSQL, MongoDB)",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# Configuration CORS pour autoriser le front-end Angular
-origins = [
-    "http://localhost:4200",  # Serveur de dev Angular
-    "http://127.0.0.1:4200"
-]
-
+# Configuration CORS dynamique
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
 @app.get("/", tags=["Health Check"])
-def health_check():
+async def health_check(
+    db: Session = Depends(get_db),
+    mongo = Depends(get_mongo_db)
+):
+    # 1. Test de connectivité PostgreSQL
+    pg_status = "error"
+    try:
+        db.execute(text("SELECT 1"))
+        pg_status = "connected"
+    except Exception as e:
+        pg_status = f"unreachable: {str(e)}"
+
+    # 2. Test de connectivité MongoDB (ping administratif)
+    mongo_status = "error"
+    try:
+        await mongo.command("ping")
+        mongo_status = "connected"
+    except Exception as e:
+        mongo_status = f"unreachable: {str(e)}"
+
     return {
         "status": "online",
-        "projet": "Vite & Gourmand",
-        "version": "1.0.0",
-        "env": "development"
+        "projet": settings.PROJECT_NAME,
+        "env": settings.ENVIRONMENT,
+        "databases": {
+            "postgresql": pg_status,
+            "mongodb": mongo_status
+        }
     }
