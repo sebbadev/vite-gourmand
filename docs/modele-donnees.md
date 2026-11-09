@@ -293,4 +293,102 @@ Contrôle d'accès basé sur les rôles (RBAC) :
 | **Périmètre des données** | Utilisateurs, catalogue commercial, commandes, lignes de facturation, horaires. | Messages de contact, avis clients, documents dénormalisés `commandes_stats`. |
 | **Objectif de performance** | Empêcher les réservations incohérentes et garantir la validité des règlements financiers. | Isoler les calculs statistiques lourds (CA par période, popularité) pour ne jamais ralentir les commandes en direct. |
 
+---
+
+## 5. Modélisation NoSQL & Collections MongoDB (P1-02)
+
+Dans le cadre de l'architecture polyglotte, **MongoDB** assure la persistance des données non relationnelles, semi-structurées et analytiques. Ce choix technique découple les flux de consultation/modération et décharge le moteur transactionnel PostgreSQL (OLTP) des requêtes d'agrégation décisionnelles lourdes.
+
+### 5.1 Collection `contacts` (Messages visiteurs & prospects)
+
+Stocke les sollicitations émises via le formulaire de contact public. La flexibilité documentaire permet d'enregistrer des demandes variées (demandes de devis sur mesure, questions allergènes) sans imposer de contraintes de clé étrangère.
+
+#### Schéma Document (JSON Schema)
+```json
+{
+  "_id": "ObjectId",
+  "nom": "String (min 2, max 50)",
+  "prenom": "String (min 2, max 50)",
+  "email": "String (email valide)",
+  "telephone": "String (optionnel, 10-15 car)",
+  "objet": "String (min 5, max 100)",
+  "message": "String (min 10, max 2000)",
+  "traite": "Boolean (défaut: false)",
+  "created_at": "ISODate"
+}
+```
+Index d'optimisation
+```javascript
+// Tri chronologique des messages non traités pour le back-office
+db.contacts.createIndex({ "traite": 1, "created_at": -1 });
+```
+
+### 5.3 Collection commandes_stats (Reporting décisionnel Admin)
+Chaque commande franchissant l'état final Terminée dans PostgreSQL est immédiatement dupliquée sous forme dénormalisée dans cette collection. Ce magasin analytique (OLAP) permet au gérant de visualiser les volumes de vente, les paniers moyens et l'évolution du chiffre d'affaires sans impacter la disponibilité de la base transactionnelle.
+
+```json
+{
+  "_id": "ObjectId",
+  "commande_id": "Int (clé primaire PostgreSQL)",
+  "numero_commande": "String (ex: CMD-2026-0001)",
+  "date_commande": "ISODate",
+  "date_prestation": "String (YYYY-MM-DD)",
+  "annee": "Int (ex: 2026)",
+  "mois": "Int (1 à 12)",
+  "semaine": "Int (1 à 52)",
+  "montant_ht": "Double",
+  "montant_tva": "Double",
+  "montant_ttc": "Double",
+  "remise_appliquee": "Double",
+  "frais_livraison": "Double",
+  "distance_km": "Double",
+  "menus": [
+    {
+      "menu_id": "Int",
+      "titre": "String",
+      "quantite": "Int",
+      "prix_unitaire": "Double",
+      "total_ligne": "Double"
+    }
+  ]
+}
+```
+Index d'optimisation
+```javascript
+// Index pour les filtrages périodiques du tableau de bord
+db.commandes_stats.createIndex({ "annee": 1, "mois": 1 });
+db.commandes_stats.createIndex({ "menus.menu_id": 1 });
+```
+
+### 5.4 Pipeline d'Agrégation Décisionnelle (Exemple d'implémentation Admin)
+Exemple de pipeline MongoDB utilisé par l'endpoint GET /api/v1/admin/stats pour calculer le volume de ventes et le chiffre d'affaires consolidé par menu sur une période donnée :
+
+```javascript
+db.commandes_stats.aggregate([
+  // 1. Filtrer sur l'année et le mois ciblés
+  {
+    $match: {
+      "annee": 2026,
+      "mois": 10
+    }
+  },
+  // 2. Déplier le tableau des menus vendus
+  {
+    $unwind: "$menus"
+  },
+  // 3. Regrouper par identifiant de menu et calculer les totaux
+  {
+    $group: {
+      _id: "$menus.menu_id",
+      titre_menu: { $first: "$menus.titre" },
+      total_commandes: { $sum: 1 },
+      quantite_totale_portions: { $sum: "$menus.quantite" },
+      chiffre_affaires_genere: { $sum: "$menus.total_ligne" }
+    }
+  },
+  // 4. Trier par chiffre d'affaires décroissant
+  {
+    $sort: { "chiffre_affaires_genere": -1 }
+  }
+]);
 ```
