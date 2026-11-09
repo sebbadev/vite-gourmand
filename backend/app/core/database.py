@@ -2,6 +2,7 @@ from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from motor.motor_asyncio import AsyncIOMotorClient
+import certifi
 
 from app.core.config import settings
 
@@ -43,7 +44,14 @@ def get_db() -> Generator[Session, None, None]:
 # 2. PERSISTANCE ANALYTIQUE & MESSAGES (MongoDB / Motor)
 # ---------------------------------------------------------------------------
 
-mongo_client: AsyncIOMotorClient = AsyncIOMotorClient(settings.MONGO_URI)
+ca = certifi.where()
+
+mongo_client: AsyncIOMotorClient = AsyncIOMotorClient(
+    settings.MONGO_URI,
+    tls=True,
+    tlsCAFile=ca,
+    serverSelectionTimeoutMS=5000  # Évite d'attendre 30s en cas de souci
+)
 mongo_db = mongo_client[settings.MONGO_DB]
 
 
