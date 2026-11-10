@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..'
 
 from app.core.config import settings
 from app.core.database import Base
+import app.models  # Charge toutes les entités dans Base.metadata
 
 # Configuration Alembic (.ini)
 config = context.config
