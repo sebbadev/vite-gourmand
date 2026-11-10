@@ -1,8 +1,9 @@
 -- ========================================================
 -- Script d'initialisation de la base : Vite & Gourmand
+-- Conforme aux entités SQLAlchemy et à la migration Alembic
 -- ========================================================
 
--- 1. Nettoyage
+-- 1. Nettoyage des tables existantes (ordre inversé des dépendances)
 DROP TABLE IF EXISTS public.menus_plats CASCADE;
 DROP TABLE IF EXISTS public.menus_themes CASCADE;
 DROP TABLE IF EXISTS public.plats_allergenes CASCADE;
@@ -19,6 +20,7 @@ DROP TABLE IF EXISTS public.regimes CASCADE;
 DROP TABLE IF EXISTS public.themes CASCADE;
 DROP TABLE IF EXISTS public.utilisateurs CASCADE;
 
+-- Nettoyage des types ENUM
 DROP TYPE IF EXISTS public.dish_types CASCADE;
 DROP TYPE IF EXISTS public.equipment CASCADE;
 DROP TYPE IF EXISTS public.notes CASCADE;
@@ -28,7 +30,7 @@ DROP TYPE IF EXISTS public.review_status CASCADE;
 DROP TYPE IF EXISTS public.user_role CASCADE;
 DROP TYPE IF EXISTS public.contact_mode CASCADE;
 
--- 2. Types ENUM
+-- 2. Types ENUM PostgreSQL
 CREATE TYPE public.dish_types AS ENUM ('Entrée', 'Plat principal', 'Accompagnement', 'Dessert');
 CREATE TYPE public.equipment AS ENUM ('Inclus', 'Non inclus', 'Retourné');
 CREATE TYPE public.notes AS ENUM ('Critique', 'À améliorer', 'Correct', 'Bien', 'Excellent');
@@ -42,7 +44,7 @@ CREATE TYPE public.contact_mode AS ENUM ('Téléphone', 'Email');
 
 CREATE TABLE public.utilisateurs (
     user_id SERIAL PRIMARY KEY,
-    email VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(50) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     prenom VARCHAR(50) NOT NULL,
     nom VARCHAR(50) NOT NULL,
@@ -57,8 +59,8 @@ CREATE TABLE public.utilisateurs (
     is_deleted BOOLEAN DEFAULT false
 );
 
-CREATE INDEX ix_utilisateurs_email ON public.utilisateurs (email);
-CREATE INDEX ix_utilisateurs_id ON public.utilisateurs (user_id);
+CREATE UNIQUE INDEX ix_utilisateurs_email ON public.utilisateurs (email);
+CREATE INDEX ix_utilisateurs_user_id ON public.utilisateurs (user_id);
 
 CREATE TABLE public.menus (
     menu_id SERIAL PRIMARY KEY,
@@ -112,27 +114,29 @@ CREATE TABLE public.horaires (
 
 CREATE TABLE public.commandes (
     commande_id SERIAL PRIMARY KEY,
-    numero_commande VARCHAR(50) NOT NULL UNIQUE,
+    numero_commande VARCHAR(50) NOT NULL,
     user_id INTEGER NOT NULL REFERENCES public.utilisateurs(user_id),
     date_prestation DATE NOT NULL,
-    heure_livraison TIMESTAMP WITH TIME ZONE NOT NULL,
-    prix_total DOUBLE PRECISION NOT NULL,
-    remise_appliquee DOUBLE PRECISION DEFAULT 0.0,
+    heure_livraison TIME WITHOUT TIME ZONE NOT NULL,
     adresse_livraison VARCHAR(255),
     distance_km DOUBLE PRECISION DEFAULT 0.0,
-    frais_livraison DOUBLE PRECISION DEFAULT 5.0,
+    frais_livraison DOUBLE PRECISION DEFAULT 0.0,
+    prix_total DOUBLE PRECISION NOT NULL,
+    remise_appliquee DOUBLE PRECISION DEFAULT 0.0,
     statut public.order_status DEFAULT 'En attente de validation'::public.order_status,
-    date_commande TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    statut_paiement public.payment_status DEFAULT 'En attente de règlement'::public.payment_status NOT NULL,
-    statut_materiel public.equipment DEFAULT 'Inclus'::public.equipment NOT NULL,
+    date_commande TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    statut_paiement public.payment_status DEFAULT 'En attente de règlement'::public.payment_status,
+    statut_materiel public.equipment DEFAULT 'Inclus'::public.equipment,
     motif_annulation TEXT,
     mode_contact_annulation public.contact_mode,
     contact_client_effectue BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_deleted BOOLEAN DEFAULT false
 );
 
-CREATE INDEX ix_commandes_id ON public.commandes (commande_id);
+CREATE INDEX ix_commandes_commande_id ON public.commandes (commande_id);
+CREATE UNIQUE INDEX ix_commandes_numero_commande ON public.commandes (numero_commande);
 
 CREATE TABLE public.commande_details (
     detail_id SERIAL PRIMARY KEY,
@@ -145,7 +149,7 @@ CREATE TABLE public.commande_details (
     is_deleted BOOLEAN DEFAULT false
 );
 
-CREATE INDEX ix_commande_details_id ON public.commande_details (detail_id);
+CREATE INDEX ix_commande_details_detail_id ON public.commande_details (detail_id);
 
 CREATE TABLE public.avis (
     avis_id SERIAL PRIMARY KEY,
@@ -161,7 +165,7 @@ CREATE TABLE public.avis (
     is_deleted BOOLEAN DEFAULT false
 );
 
-CREATE INDEX ix_avis_id ON public.avis (avis_id);
+CREATE INDEX ix_avis_avis_id ON public.avis (avis_id);
 
 -- 4. Tables de liaison (n-n)
 

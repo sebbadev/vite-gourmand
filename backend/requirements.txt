@@ -18,7 +18,7 @@ certifi>=2024.0.0
 
 # Sécurité, Hachage & Tokens JWT
 bcrypt>=4.0.1
-python-jose[cryptography]>=3.3.0
+pyjwt>=2.8.0
 python-multipart>=0.0.12
 
 # Gestion de l'environnement (.env)

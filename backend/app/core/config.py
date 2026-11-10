@@ -1,7 +1,12 @@
+from pathlib import Path
 from functools import lru_cache
 from typing import List, Union
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Résolution absolue du dossier backend/ (2 niveaux au-dessus de app/core/)
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+ENV_FILE_PATH = BACKEND_DIR / ".env"
 
 
 class Settings(BaseSettings):
@@ -42,9 +47,9 @@ class Settings(BaseSettings):
             f"{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
-    # Chargement du fichier .env
+    # Chargement robuste du fichier .env via son chemin absolu
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=ENV_FILE_PATH,
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"
