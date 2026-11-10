@@ -75,9 +75,10 @@ Il sert de guide pour les itérations de développement des fonctionnalités du 
 
 
 * P3-03 Sécurité & Authentification
-	* Hachage des mots de passe (`passlib[bcrypt]`)
-	* Gestion des tokens JWT (`python-jose`)
-	* Middleware / Dépendance RBAC (contrôle d'accès par rôles : Visiteur, Client, Employé, Admin)
+	* Hachage sécurisé des mots de passe avec `bcrypt` natif (remplacement de passlib pour pérennité technique)
+    * Génération et validation des tokens JWT avec `PyJWT` (compatible RFC 7519)
+    * Dépendances FastAPI & RBAC (contrôle d'accès par rôles : Visiteur, Client, Employé, Administrateur)
+    * Endpoints d'authentification (`/auth/login`, `/auth/me`)
 
 
 * P3-04 Implémentation de la logique métier (Règles de Gestion)
