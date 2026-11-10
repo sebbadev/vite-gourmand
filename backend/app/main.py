@@ -6,6 +6,7 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.core.database import get_db, get_mongo_db
 from app.routers.auth import router as auth_router
+from app.routers.orders import router as orders_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -26,6 +27,7 @@ app.add_middleware(
 
 # Branchement des routeurs métier
 app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(orders_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/", tags=["Health Check"])
@@ -33,7 +35,6 @@ async def health_check(
     db: Session = Depends(get_db),
     mongo = Depends(get_mongo_db)
 ):
-    # 1. Test de connectivité PostgreSQL
     pg_status = "error"
     try:
         db.execute(text("SELECT 1"))
@@ -41,7 +42,6 @@ async def health_check(
     except Exception as e:
         pg_status = f"unreachable: {str(e)}"
 
-    # 2. Test de connectivité MongoDB (ping administratif)
     mongo_status = "error"
     try:
         await mongo.command("ping")
