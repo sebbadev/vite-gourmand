@@ -5,6 +5,7 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import get_db, get_mongo_db
+from app.routers.auth import router as auth_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -22,6 +23,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Branchement des routeurs métier
+app.include_router(auth_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/", tags=["Health Check"])
