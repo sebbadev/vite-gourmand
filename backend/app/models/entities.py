@@ -56,7 +56,6 @@ class ReviewStatus(str, enum.Enum):
 
 class UserRole(str, enum.Enum):
     ADMIN = "Administrateur"
-    CHEF = "Chef"
     EMPLOYE = "Employé"
     CLIENT = "Client"
 
@@ -167,9 +166,9 @@ class Plat(Base):
     images_url = Column(String(255), nullable=True)
 
     menus = relationship("Menu", secondary=menus_plats, back_populates="plats")
-    allergenes = relationship("Allergene", secondary=plats_allergenes, back_populates="allergenes")
-    regimes = relationship("Regime", secondary=plats_regimes, back_populates="regimes")
-    themes = relationship("Theme", secondary=plats_themes, back_populates="themes")
+    allergenes = relationship("Allergene", secondary=plats_allergenes, back_populates="plats")
+    regimes = relationship("Regime", secondary=plats_regimes, back_populates="plats")
+    themes = relationship("Theme", secondary=plats_themes, back_populates="plats")
 
 
 class Commande(Base):
