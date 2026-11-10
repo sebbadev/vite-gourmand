@@ -1,11 +1,16 @@
 from datetime import date
+from typing import Optional
+
 from app.schemas.order import EquipmentPenaltyCheck
 
 DELAI_MAX_JOURS_RESTITUTION = 10
 MONTANT_PENALITE_FORFAITAIRE = 600.00
 
 
-def check_equipment_penalty(date_prestation: date, date_controle: Optional[date] = None) -> EquipmentPenaltyCheck:
+def check_equipment_penalty(
+    date_prestation: date,
+    date_controle: Optional[date] = None
+) -> EquipmentPenaltyCheck:
     """
     Règle de Gestion RG-04 :
     Vérifie si le délai maximal de 10 jours pour la restitution du matériel prêté
@@ -24,3 +29,4 @@ def check_equipment_penalty(date_prestation: date, date_controle: Optional[date]
         depassement=depassement,
         penalite_forfaitaire=MONTANT_PENALITE_FORFAITAIRE if depassement else 0.0
     )
+    
