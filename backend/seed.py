@@ -17,24 +17,25 @@ from app.models.entities import (
     Horaire
 )
 
+
 def hash_password(password: str) -> str:
-    """Hache un mot de passe en utilisant bcrypt natif (sel généré automatiquement)."""
+    """Hache un mot de passe en utilisant bcrypt natif (rounds=12)."""
     pwd_bytes = password.encode("utf-8")
-    salt = bcrypt.gensalt()
+    salt = bcrypt.gensalt(rounds=12)
     return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
 
 
 def seed_database():
     session = SessionLocal()
     try:
-        print("🌱 Début de l'injection des fixtures...")
+        print("🌱 Début de l'injection des fixtures complètes et harmonisées...")
 
         # -------------------------------------------------------------------
         # 1. RÉGIMES ALIMENTAIRES
         # -------------------------------------------------------------------
         regimes_data = [
             "Végétarien",
-            "Végan",
+            "Végétalien (Vegan)",
             "Sans gluten",
             "Sans lactose",
             "Halal",
@@ -56,8 +57,7 @@ def seed_database():
         # -------------------------------------------------------------------
         allergenes_data = [
             "Gluten", "Crustacés", "Œufs", "Poissons", "Arachides",
-            "Soja", "Lait / Lactose", "Fruits à coque", "Céleri",
-            "Moutarde", "Graines de sésame", "Sulfites"
+            "Soja", "Lait", "Fruits à coque", "Moutarde", "Graines de sésame"
         ]
         allergenes_map = {}
         for libelle in allergenes_data:
@@ -74,12 +74,11 @@ def seed_database():
         # 3. THÈMES
         # -------------------------------------------------------------------
         themes_data = [
-            "Mariage & Cérémonie",
-            "Séminaire & Entreprise",
-            "Anniversaire",
-            "Cocktail Dînatoire",
-            "Gastronomique Français",
-            "Saveurs du Monde"
+            "Mariage & Réception",
+            "Cocktail Entreprise",
+            "Buffet Champêtre",
+            "Gala Événementiel",
+            "Anniversaire"
         ]
         themes_map = {}
         for libelle in themes_data:
@@ -93,58 +92,61 @@ def seed_database():
         print("  ✓ Thèmes injectés.")
 
         # -------------------------------------------------------------------
-        # 4. UTILISATEURS DE TEST (1 de chaque rôle)
+        # 4. UTILISATEURS (Comptes alignés sur @vite-gourmand.fr et fixtures.sql)
+        # Mot de passe unique pour tous les comptes : Password123!
         # -------------------------------------------------------------------
+        default_pwd = "Password123!"
         users_data = [
             {
-                "email": "admin@vitegourmand.fr",
-                "password": "AdminPassword123!",
-                "prenom": "Alice",
-                "nom": "Administrateur",
+                "email": "admin@vite-gourmand.fr",
+                "password": default_pwd,
+                "prenom": "Sophie",
+                "nom": "Directrice",
                 "telephone": "0601020304",
-                "adresse": "10 Rue Royale",
-                "code_postal": "75008",
+                "adresse": "14 Rue de la Paix",
+                "code_postal": "75002",
                 "ville": "Paris",
                 "pays": "France",
                 "role": UserRole.ADMIN,
             },
             {
-                "email": "chef@vitegourmand.fr",
-                "password": "ChefPassword123!",
-                "prenom": "Bernard",
-                "nom": "Bocuse",
-                "telephone": "0602030405",
-                "adresse": "12 Quai de la Pêcherie",
-                "code_postal": "69001",
-                "ville": "Lyon",
+                "email": "employe@vite-gourmand.fr",
+                "password": default_pwd,
+                "prenom": "José",
+                "nom": "Collaborateur",
+                "telephone": "0611223344",
+                "adresse": "22 Avenue Foch",
+                "code_postal": "75016",
+                "ville": "Paris",
                 "pays": "France",
                 "role": UserRole.EMPLOYE,
             },
             {
-                "email": "employe@vitegourmand.fr",
-                "password": "EmployePassword123!",
-                "prenom": "Chloé",
-                "nom": "Livreuse",
-                "telephone": "0603040506",
-                "adresse": "5 Rue des Fleurs",
-                "code_postal": "33000",
-                "ville": "Bordeaux",
+                "email": "client.durand@example.com",
+                "password": default_pwd,
+                "prenom": "Marc",
+                "nom": "Durand",
+                "telephone": "0655443322",
+                "adresse": "5 Boulevard Victor Hugo",
+                "code_postal": "92200",
+                "ville": "Neuilly-sur-Seine",
                 "pays": "France",
-                "role": UserRole.EMPLOYE,
+                "role": UserRole.CLIENT,
             },
             {
-                "email": "client@vitegourmand.fr",
-                "password": "ClientPassword123!",
-                "prenom": "David",
-                "nom": "Dupont",
-                "telephone": "0604050607",
-                "adresse": "8 Avenue Jean Jaurès",
-                "code_postal": "59000",
-                "ville": "Lille",
+                "email": "client.leroy@example.com",
+                "password": default_pwd,
+                "prenom": "Claire",
+                "nom": "Leroy",
+                "telephone": "0677889900",
+                "adresse": "18 Rue des Lilas",
+                "code_postal": "94300",
+                "ville": "Vincennes",
                 "pays": "France",
                 "role": UserRole.CLIENT,
             },
         ]
+
         for u in users_data:
             stmt = select(Utilisateur).where(Utilisateur.email == u["email"])
             user = session.execute(stmt).scalar_one_or_none()
@@ -162,19 +164,21 @@ def seed_database():
                     role=u["role"],
                 )
                 session.add(user)
-        print("  ✓ Utilisateurs de test injectés.")
+            else:
+                user.password_hash = hash_password(u["password"])
+        print("  ✓ Utilisateurs injectés et synchronisés.")
 
         # -------------------------------------------------------------------
         # 5. HORAIRES D'OUVERTURE
         # -------------------------------------------------------------------
         horaires_data = [
-            ("Lundi", time(9, 0), time(19, 0)),
-            ("Mardi", time(9, 0), time(19, 0)),
-            ("Mercredi", time(9, 0), time(19, 0)),
-            ("Jeudi", time(9, 0), time(19, 0)),
-            ("Vendredi", time(9, 0), time(21, 0)),
-            ("Samedi", time(10, 0), time(22, 0)),
-            ("Dimanche", time(10, 0), time(15, 0)),
+            ("Lundi", time(8, 0), time(19, 0)),
+            ("Mardi", time(8, 0), time(19, 0)),
+            ("Mercredi", time(8, 0), time(19, 0)),
+            ("Jeudi", time(8, 0), time(20, 0)),
+            ("Vendredi", time(8, 0), time(22, 0)),
+            ("Samedi", time(7, 30), time(23, 0)),
+            ("Dimanche", time(8, 0), time(16, 0)),
         ]
         for jour, h_ouv, h_ferm in horaires_data:
             stmt = select(Horaire).where(Horaire.jour == jour)
@@ -188,52 +192,92 @@ def seed_database():
         # -------------------------------------------------------------------
         plats_definitions = [
             {
-                "titre": "Velouté de potimarron et châtaignes",
+                "titre": "Carpaccio de Saint-Jacques au citron vert",
                 "type_de_plat": DishType.ENTREE,
-                "images_url": "https://images.unsplash.com/photo-1547592166-23ac45744acd",
-                "allergenes": ["Lait / Lactose"],
-                "regimes": ["Végétarien", "Sans gluten"],
-                "themes": ["Gastronomique Français", "Automne & Hiver"]
+                "images_url": "/assets/images/plats/carpaccio-st-jacques.webp",
+                "allergenes": ["Crustacés"],
+                "regimes": [],
+                "themes": ["Mariage & Réception", "Gala Événementiel"]
             },
             {
-                "titre": "Tartare de saumon d'Isigny et aneth",
+                "titre": "Velouté de potimarron et éclats de châtaigne",
                 "type_de_plat": DishType.ENTREE,
-                "images_url": "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb",
+                "images_url": "/assets/images/plats/veloute-potimarron.webp",
+                "allergenes": ["Lait"],
+                "regimes": ["Végétarien", "Sans gluten"],
+                "themes": ["Cocktail Entreprise", "Buffet Champêtre"]
+            },
+            {
+                "titre": "Salade croquante de quinoa aux agrumes",
+                "type_de_plat": DishType.ENTREE,
+                "images_url": "/assets/images/plats/salade-quinoa.webp",
+                "allergenes": [],
+                "regimes": ["Végétarien", "Végétalien (Vegan)", "Sans gluten", "Sans lactose"],
+                "themes": ["Cocktail Entreprise", "Buffet Champêtre"]
+            },
+            {
+                "titre": "Filet de bœuf rôti sauce morilles",
+                "type_de_plat": DishType.MAIN_DISH,
+                "images_url": "/assets/images/plats/filet-boeuf-morilles.webp",
+                "allergenes": ["Lait"],
+                "regimes": [],
+                "themes": ["Mariage & Réception", "Gala Événementiel"]
+            },
+            {
+                "titre": "Pavé de saumon sauvage rôti et herbes fraîches",
+                "type_de_plat": DishType.MAIN_DISH,
+                "images_url": "/assets/images/plats/pave-saumon.webp",
                 "allergenes": ["Poissons"],
-                "regimes": ["Sans gluten", "Sans lactose"],
-                "themes": ["Cocktail Dînatoire"]
+                "regimes": [],
+                "themes": ["Cocktail Entreprise", "Buffet Champêtre"]
             },
             {
-                "titre": "Suprême de volaille fermière aux morilles",
+                "titre": "Mijoté de lentilles corail au curry doux et coco",
                 "type_de_plat": DishType.MAIN_DISH,
-                "images_url": "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d",
-                "allergenes": ["Lait / Lactose"],
-                "regimes": ["Sans gluten", "Halal"],
-                "themes": ["Mariage & Cérémonie", "Gastronomique Français"]
+                "images_url": "/assets/images/plats/curry-lentilles.webp",
+                "allergenes": [],
+                "regimes": ["Végétarien", "Végétalien (Vegan)", "Sans gluten", "Sans lactose"],
+                "themes": ["Cocktail Entreprise", "Buffet Champêtre"]
             },
             {
-                "titre": "Risotto crémeux aux asperges vertes et parmesan",
-                "type_de_plat": DishType.MAIN_DISH,
-                "images_url": "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9",
-                "allergenes": ["Lait / Lactose"],
-                "regimes": ["Végétarien", "Sans gluten"],
-                "themes": ["Mariage & Cérémonie"]
-            },
-            {
-                "titre": "Mousse légère au chocolat noir Valrhona",
-                "type_de_plat": DishType.DESSERT,
-                "images_url": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55",
-                "allergenes": ["Œufs", "Lait / Lactose"],
-                "regimes": ["Végétarien", "Sans gluten"],
-                "themes": ["Anniversaire", "Gastronomique Français"]
-            },
-            {
-                "titre": "Tartelette sablée aux framboises fraîches",
-                "type_de_plat": DishType.DESSERT,
-                "images_url": "https://images.unsplash.com/photo-1565958011703-44f9829ba187",
-                "allergenes": ["Gluten", "Lait / Lactose", "Œufs"],
+                "titre": "Écrasé de pommes de terre à la truffe d'été",
+                "type_de_plat": DishType.ACCOMPAGNEMENT,
+                "images_url": "/assets/images/plats/ecrase-truffe.webp",
+                "allergenes": [],
                 "regimes": ["Végétarien"],
-                "themes": ["Cocktail Dînatoire", "Anniversaire"]
+                "themes": ["Mariage & Réception", "Gala Événementiel"]
+            },
+            {
+                "titre": "Poêlée printanière d'asperges et fèves",
+                "type_de_plat": DishType.ACCOMPAGNEMENT,
+                "images_url": "/assets/images/plats/poelee-legumes.webp",
+                "allergenes": [],
+                "regimes": ["Végétarien", "Végétalien (Vegan)", "Sans gluten", "Sans lactose"],
+                "themes": ["Cocktail Entreprise", "Gala Événementiel"]
+            },
+            {
+                "titre": "Fondant pur cacao et coulis de framboises",
+                "type_de_plat": DishType.DESSERT,
+                "images_url": "/assets/images/plats/fondant-chocolat.webp",
+                "allergenes": ["Gluten", "Œufs", "Lait"],
+                "regimes": ["Végétarien"],
+                "themes": ["Mariage & Réception", "Anniversaire"]
+            },
+            {
+                "titre": "Tartelette sablée au citron meringuée",
+                "type_de_plat": DishType.DESSERT,
+                "images_url": "/assets/images/plats/tartelette-citron.webp",
+                "allergenes": ["Gluten", "Œufs", "Lait"],
+                "regimes": ["Végétarien"],
+                "themes": ["Cocktail Entreprise", "Anniversaire"]
+            },
+            {
+                "titre": "Salade de fruits de saison parfumée à la menthe",
+                "type_de_plat": DishType.DESSERT,
+                "images_url": "/assets/images/plats/salade-fruits.webp",
+                "allergenes": [],
+                "regimes": ["Végétarien", "Végétalien (Vegan)", "Sans gluten", "Sans lactose"],
+                "themes": ["Buffet Champêtre", "Anniversaire"]
             },
         ]
 
@@ -266,32 +310,49 @@ def seed_database():
         # -------------------------------------------------------------------
         menus_definitions = [
             {
-                "titre": "Menu Prestige d'Antan",
-                "nombre_personnes_min": 6,
-                "prix_par_personne": 48.50,
-                "description": "Un voyage gastronomique d'exception conçu pour vos célébrations, mariages et réceptions privées.",
-                "quantite_disponible": 40,
-                "images_url": "https://images.unsplash.com/photo-1555244162-803834f70033",
+                "titre": "Menu Prestige des Grands Jours",
+                "nombre_personnes_min": 10,
+                "prix_par_personne": 48.00,
+                "description": "Une sélection raffinée associant Saint-Jacques et bœuf truffé pour des événements d'exception.",
+                "quantite_disponible": 150,
+                "images_url": "/assets/images/menus/prestige.webp",
                 "plats": [
-                    "Tartare de saumon d'Isigny et aneth",
-                    "Suprême de volaille fermière aux morilles",
-                    "Mousse légère au chocolat noir Valrhona"
+                    "Carpaccio de Saint-Jacques au citron vert",
+                    "Filet de bœuf rôti sauce morilles",
+                    "Écrasé de pommes de terre à la truffe d'été",
+                    "Fondant pur cacao et coulis de framboises"
                 ],
-                "themes": ["Mariage & Cérémonie", "Gastronomique Français"]
+                "themes": ["Mariage & Réception", "Gala Événementiel"]
             },
             {
-                "titre": "Menu Terroir & Végétal",
-                "nombre_personnes_min": 4,
-                "prix_par_personne": 36.00,
-                "description": "Une alliance délicate de produits de saison 100 % végétariens et sans compromis sur la gourmandise.",
-                "quantite_disponible": 25,
-                "images_url": "https://images.unsplash.com/photo-1540420773420-3366772f4999",
+                "titre": "Menu Cocktail Signature",
+                "nombre_personnes_min": 15,
+                "prix_par_personne": 32.50,
+                "description": "Formule dînatoire complète idéale pour les soirées professionnelles et réceptions d'entreprise.",
+                "quantite_disponible": 300,
+                "images_url": "/assets/images/menus/cocktail.webp",
                 "plats": [
-                    "Velouté de potimarron et châtaignes",
-                    "Risotto crémeux aux asperges vertes et parmesan",
-                    "Tartelette sablée aux framboises fraîches"
+                    "Velouté de potimarron et éclats de châtaigne",
+                    "Pavé de saumon sauvage rôti et herbes fraîches",
+                    "Poêlée printanière d'asperges et fèves",
+                    "Tartelette sablée au citron meringuée"
                 ],
-                "themes": ["Anniversaire", "Séminaire & Entreprise"]
+                "themes": ["Cocktail Entreprise", "Gala Événementiel"]
+            },
+            {
+                "titre": "Menu Champêtre & Végétal",
+                "nombre_personnes_min": 8,
+                "prix_par_personne": 26.00,
+                "description": "Élaboré intégralement à partir de produits frais de saison, labellisé végétarien et sans gluten.",
+                "quantite_disponible": 100,
+                "images_url": "/assets/images/menus/vegetal.webp",
+                "plats": [
+                    "Velouté de potimarron et éclats de châtaigne",
+                    "Salade croquante de quinoa aux agrumes",
+                    "Mijoté de lentilles corail au curry doux et coco",
+                    "Salade de fruits de saison parfumée à la menthe"
+                ],
+                "themes": ["Buffet Champêtre", "Anniversaire"]
             }
         ]
 
@@ -319,7 +380,7 @@ def seed_database():
 
         # Valider toutes les transactions
         session.commit()
-        print("\n🎉 Toutes les fixtures ont été insérées avec succès dans PostgreSQL 18 !")
+        print("\n🎉 Toutes les fixtures ont été insérées et synchronisées avec succès !")
 
     except Exception as e:
         session.rollback()
