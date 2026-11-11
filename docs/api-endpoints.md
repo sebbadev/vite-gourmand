@@ -1,202 +1,57 @@
-# Spécifications & Matrice des Endpoints API REST — Vite & Gourmand (P1-03)
+# Matrice des Endpoints API REST — Vite & Gourmand
 
-> Référentiel des contrats d'interface (OpenAPI / Swagger) pour l'API REST FastAPI.  
-> Titre Professionnel Développeur Web et Web Mobile (RNCP 37674).  
-> Ce document formalise les routes d'API, les méthodes HTTP, les payloads attendus, les codes retours et le contrôle d'accès (RBAC).
-
----
-
-## 1. Principes d'Architecture de l'API
-
-- **Préfixe global :** `/api/v1`
-- **Format d'échange :** `application/json` (encodage UTF-8)
-- **Authentification :** En-tête HTTP standard `Authorization: Bearer <JWT_TOKEN>`
-- **Format des erreurs standardisées :**
-  ```json
-  {
-    "detail": "Message explicatif de l'erreur ou validation Pydantic"
-  }
-  ```
-
-* **Rôles RBAC :** (Role-Based Access Control)
-  * **Public** : Accessible sans authentification (Visiteur)
-  * **Client** : Utilisateur authentifié standard
-  * **Employé** : Personnel du restaurant traiteur
-  * **Admin** : Direction du restaurant traiteur
+> Référentiel technique des contrats d'interface de l'API RESTful **Vite & Gourmand** (Titre professionnel Développeur Web et Web Mobile - RNCP 37674).  
+> Ce document consigne l'ensemble des points d'accès (endpoints), méthodes HTTP, paramètres de requête, corps de transfert (DTOs) et contrôles d'accès basés sur les rôles (RBAC).
 
 ---
 
-## 2. Matrice Globale des Endpoints
+## 1. Vue d'Ensemble & Standards d'Architecture
 
-| Méthode | URI | Rôle Requis | Description Métier | Code Succès | Erreurs Usuelles | Persistance |
-| --- | --- | --- | --- | --- | --- | --- |
-| **AUTH & COMPTE** |  |  |  |  |  |  |
-| `POST` | `/api/v1/auth/register` | Public | Inscription d'un nouveau compte client | `201 Created` | `400`, `409` | PostgreSQL |
-| `POST` | `/api/v1/auth/login` | Public | Authentification et émission du token JWT | `200 OK` | `400`, `401` | PostgreSQL |
-| `POST` | `/api/v1/auth/forgot-password` | Public | Demande de réinitialisation de mot de passe | `200 OK` | `422` | PostgreSQL |
-| `POST` | `/api/v1/auth/reset-password` | Public | Validation du nouveau mot de passe via token | `200 OK` | `400`, `404` | PostgreSQL |
-| `GET` | `/api/v1/users/me` | Client+ | Consultation des informations du profil | `200 OK` | `401` | PostgreSQL |
-| `PATCH` | `/api/v1/users/me` | Client+ | Modification des coordonnées personnelles | `200 OK` | `400`, `401` | PostgreSQL |
-| `PATCH` | `/api/v1/users/me/password` | Client+ | Modification sécurisée du mot de passe | `200 OK` | `400`, `401` | PostgreSQL |
-| **CATALOGUE & HORAIRES** |  |  |  |  |  |  |
-| `GET` | `/api/v1/menus` | Public | Liste des menus actifs avec filtres | `200 OK` | `422` | PostgreSQL |
-| `GET` | `/api/v1/menus/{id}` | Public | Fiche détaillée d'un menu et ses plats | `200 OK` | `404` | PostgreSQL |
-| `GET` | `/api/v1/horaires` | Public | Horaires d'ouverture hebdomadaires | `200 OK` | `500` | PostgreSQL |
-| `GET` | `/api/v1/filtres/options` | Public | Référentiels pour filtres (thèmes, régimes) | `200 OK` | `500` | PostgreSQL |
-| **TUNNEL DE COMMANDE** |  |  |  |  |  |  |
-| `POST` | `/api/v1/commandes/devis` | Public/Client | Simulation calcul prix, remises et km | `200 OK` | `400`, `422` | En mémoire (Service) |
-| `POST` | `/api/v1/commandes` | Client | Création d'une commande (panier pré-rempli) | `201 Created` | `400`, `401`, `422` | PostgreSQL |
-| `GET` | `/api/v1/commandes` | Client | Historique paginé des commandes du client | `200 OK` | `401` | PostgreSQL |
-| `GET` | `/api/v1/commandes/{id}` | Client | Suivi en temps réel de l'état de commande | `200 OK` | `401`, `403`, `404` | PostgreSQL |
-| `POST` | `/api/v1/commandes/{id}/annuler` | Client | Annulation par le client (avant acceptation) | `200 OK` | `400`, `403`, `404` | PostgreSQL |
-| `GET` | `/api/v1/commandes/{id}/facture` | Client | Téléchargement du PDF de la facture | `200 OK` | `400`, `403`, `404` | PostgreSQL + PDF |
-| **CONTACT & AVIS** |  |  |  |  |  |  |
-| `POST` | `/api/v1/contact` | Public | Envoi d'un message via le formulaire | `201 Created` | `422` | MongoDB (`contacts`) |
-| `POST` | `/api/v1/commandes/{id}/avis` | Client | Dépôt d'un avis suite à commande terminée | `201 Created` | `400`, `403`, `409` | MongoDB (`avis`) |
-| `GET` | `/api/v1/avis/public` | Public | Liste des avis approuvés pour la vitrine | `200 OK` | `500` | MongoDB (`avis`) |
-| **ESPACE COLLABORATEUR (EMPLOYÉ)** |  |  |  |  |  |  |
-| `GET` | `/api/v1/admin/commandes` | Employé/Admin | Tableau de bord et recherche multicritère | `200 OK` | `401`, `403` | PostgreSQL |
-| `POST` | `/api/v1/admin/commandes/{id}/accepter` | Employé/Admin | Validation commande et lien de règlement | `200 OK` | `400`, `404` | PostgreSQL |
-| `POST` | `/api/v1/admin/commandes/{id}/refuser` | Employé/Admin | Refus avec motif et libération du stock | `200 OK` | `400`, `404` | PostgreSQL |
-| `PATCH` | `/api/v1/admin/commandes/{id}/statut` | Employé/Admin | Transition d'état (préparation/livraison) | `200 OK` | `400`, `404` | PostgreSQL |
-| `POST` | `/api/v1/admin/commandes/{id}/annuler` | Employé/Admin | Annulation avec contact client tracé | `200 OK` | `400`, `404` | PostgreSQL |
-| `POST` | `/api/v1/admin/commandes/{id}/livrer` | Employé/Admin | Confirmation de livraison et encaissement | `200 OK` | `400`, `404` | PostgreSQL |
-| `POST` | `/api/v1/admin/commandes/{id}/restitution` | Employé/Admin | Contrôle matériel (conforme / clôture) | `200 OK` | `400`, `404` | PostgreSQL + MongoDB |
-| `POST` | `/api/v1/admin/commandes/{id}/litige-materiel` | Employé/Admin | Dépassement > 10j (facture pénalité 600€) | `200 OK` | `400`, `404` | PostgreSQL |
-| `POST` | `/api/v1/admin/menus` | Employé/Admin | Ajout d'un menu au catalogue | `201 Created` | `400`, `422` | PostgreSQL |
-| `PUT` | `/api/v1/admin/menus/{id}` | Employé/Admin | Mise à jour complète d'un menu | `200 OK` | `400`, `404` | PostgreSQL |
-| `DELETE` | `/api/v1/admin/menus/{id}` | Employé/Admin | Suppression logique d'un menu (soft delete) | `200 OK` | `404` | PostgreSQL |
-| `GET` | `/api/v1/admin/avis` | Employé/Admin | Liste des avis en attente de modération | `200 OK` | `401`, `403` | MongoDB (`avis`) |
-| `PATCH` | `/api/v1/admin/avis/{id}` | Employé/Admin | Modération d'un avis (Approuvé / Rejeté) | `200 OK` | `400`, `404` | MongoDB (`avis`) |
-| **ESPACE DIRECTION (ADMINISTRATEUR)** |  |  |  |  |  |  |
-| `POST` | `/api/v1/admin/employees` | Admin | Création d'un collaborateur (compte José) | `201 Created` | `400`, `409` | PostgreSQL |
-| `PATCH` | `/api/v1/admin/employees/{id}/disable` | Admin | Révocation immédiate d'un employé | `200 OK` | `404` | PostgreSQL |
-| `GET` | `/api/v1/admin/stats` | Admin | Indicateurs décisionnels (CA, volumes) | `200 OK` | `401`, `403` | MongoDB (`commandes_stats`) |
+- **Protocole & Format :** RESTful HTTP/JSON (conforme OpenAPI 3.1 / Swagger UI).
+- **Préfixe global des routes :** `/api/v1`
+- **Mécanisme d'Authentification :** Bearer Token (JSON Web Token - RFC 7519) signé en HMAC-SHA256 (HS256).
+- **Gestion des Erreurs :** Codes de statut HTTP standards (`200`, `201`, `204`, `400`, `401`, `403`, `404`, `422`).
 
 ---
 
-## 3. Contrats d'Interface Détaillés (Exemples Clés)
+## 2. Authentification & Profil Utilisateur (`/auth`)
 
-### 3.1 Authentification (`POST /api/v1/auth/login`)
-
-* **Corps de la requête (`UserLoginSchema`) :**
-```json
-{
-  "email": "client.durand@example.com",
-  "password": "Password123!"
-}
-
-```
-
-
-* **Réponse succès `200 OK` (`TokenResponseSchema`) :**
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6...",
-  "token_type": "bearer",
-  "user": {
-    "user_id": 3,
-    "email": "client.durand@example.com",
-    "prenom": "Marc",
-    "nom": "Durand",
-    "role": "Client"
-  }
-}
-
-```
-
-
+| Méthode | Point d'Accès | Rôle Minimum | Corps de Requête (Request DTO) | Modèle de Réponse (Response DTO) | Statut HTTP | Description Métier |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/login` | Public (Visiteur) | `LoginRequest` (email, password) | `Token` (access_token, token_type: "bearer") | `200 OK`<br>`401 Unauthorized` | Connexion utilisateur, vérification du hash bcrypt et émission du jeton JWT. Protection anti-énumération. |
+| `GET` | `/api/v1/auth/me` | Authentifié (Client, Employé, Admin) | — *(En-tête Authorization: Bearer)* | `UserResponse` (user_id, email, prenom, nom, role, coordonnées) | `200 OK`<br>`401 Unauthorized` | Récupération du profil complet de l'utilisateur connecté pour l'hydratation de la SPA Angular. |
 
 ---
 
-### 3.2 Calcul du Devis & Règles Métier (`POST /api/v1/commandes/devis`)
+## 3. Catalogue Commercial & Menus (`/menus`)
 
-* **Corps de la requête (`QuoteRequestSchema`) :**
-```json
-{
-  "menu_id": 2,
-  "quantite_personnes": 25,
-  "distance_km": 12.0
-}
-
-```
-
-
-* **Réponse succès `200 OK` (`QuoteResponseSchema`) :**
-```json
-{
-  "menu_id": 2,
-  "titre": "Menu Cocktail Signature",
-  "prix_unitaire": 32.50,
-  "quantite_personnes": 25,
-  "sous_total_brut": 812.50,
-  "remise_applicable": true,
-  "taux_remise": 0.10,
-  "montant_remise": 81.25,
-  "frais_livraison": 12.08,
-  "total_estime_ttc": 743.33
-}
-
-```
-
-
+| Méthode | Point d'Accès | Rôle Minimum | Paramètres / Corps de Requête | Modèle de Réponse (Response DTO) | Statut HTTP | Description Métier |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/menus/filtres` | Public (Visiteur) | — | `CatalogueFilters` (themes, regimes, allergenes) | `200 OK` | Fournit les listes de référence pour initialiser les filtres déroulants (dropdowns) côté frontend Angular. |
+| `GET` | `/api/v1/menus` | Public (Visiteur) | Query params :<br>• `prix_max` (float)<br>• `nb_personnes` (int)<br>• `theme_id` (int)<br>• `regime_id` (int)<br>• `sans_allergene_id` (int) | `List[MenuListItem]` (avec badges themes, regimes, allergenes déduits) | `200 OK` | Catalogue public des menus actifs avec filtres combinés temps réel. Conformité stricte pour les régimes (100% des plats) et exclusion stricte des allergènes. |
+| `GET` | `/api/v1/menus/{menu_id}` | Public (Visiteur) | Path param : `menu_id` (int) | `MenuDetail` (composition complète des plats, allergènes et badges globaux) | `200 OK`<br>`404 Not Found` | Fiche détaillée d'un menu avant mise au panier ou passation de commande. |
+| `POST` | `/api/v1/menus` | Employé / Admin | `MenuCreate` (titre, prix, nb_personnes_min, stock, plat_ids, theme_ids) | `MenuDetail` | `201 Created`<br>`401 / 403` | Création d'un nouveau menu dans le catalogue (back-office). |
+| `DELETE` | `/api/v1/menus/{menu_id}` | Employé / Admin | Path param : `menu_id` (int) | — | `204 No Content`<br>`404 Not Found` | Suppression logique (soft delete) : bascule `is_deleted = True` et `is_active = False` pour préserver l'historique des commandes. |
 
 ---
 
-### 3.3 Annulation de Commande par l'Employé (`POST /api/v1/admin/commandes/{id}/annuler`)
+## 4. Devis & Logique Métier Panier (`/commandes`)
 
-* **Corps de la requête (`OrderCancelAuditSchema`) :**
-```json
-{
-  "motif": "Panne de chambre froide empêchant le maintien de la chaîne du froid.",
-  "mode_contact": "Téléphone",
-  "contact_client_effectue": true
-}
-
-```
-
-
-* **Réponse succès `200 OK` :**
-```json
-{
-  "message": "Commande annulée avec succès, stock restauré et client notifié.",
-  "commande_id": 3,
-  "statut": "Annulée",
-  "stock_restaure": true
-}
-
-```
-
-
+| Méthode | Point d'Accès | Rôle Minimum | Corps de Requête (Request DTO) | Modèle de Réponse (Response DTO) | Statut HTTP | Description Métier |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/commandes/devis` | Public (Visiteur) | `QuoteRequest` (items: [menu_id, quantite], distance_km) | `QuoteResponse` (sous_total_brut, remise_appliquee, frais_livraison, prix_total, eligible_remise) | `200 OK`<br>`400 Bad Request` | Moteur de tarification dynamique :<br>• RG-01 : Montant brut = personnes × prix unitaire (contrôle seuil minimal).<br>• RG-02 : Remise automatique de 10% si quantite ≥ min + 5.<br>• RG-03 : Frais de livraison = 5,00 € + 0,59 € / km. |
 
 ---
 
-### 3.4 Statistiques Décisionnelles Admin (`GET /api/v1/admin/stats?annee=2026&mois=10`)
+## 5. Endpoints en Cours de Développement (Phase 3 - P3-05)
 
-* **En-tête :** `Authorization: Bearer <TOKEN_ADMIN>`
-* **Réponse succès `200 OK` (`DashboardStatsSchema`) :**
-```json
-{
-  "periode": {
-    "annee": 2026,
-    "mois": 10
-  },
-  "indicateurs_cles": {
-    "total_chiffre_affaires": 960.00,
-    "nombre_commandes": 1,
-    "panier_moyen": 960.00
-  },
-  "repartition_par_menu": [
-    {
-      "menu_id": 1,
-      "titre": "Menu Prestige des Grands Jours",
-      "commandes_count": 1,
-      "portions_vendues": 20,
-      "chiffre_affaires": 960.00
-    }
-  ]
-}
+Les points d'accès ci-dessous formalisent les contrats du tunnel de commande, de la logistique et du reporting décisionnel :
 
-```
-
-
+| Méthode | Point d'Accès | Rôle Minimum | Modèle Request / Response | Statut Cible | Rôle Métier |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/commandes` | Client | `OrderCreate` $\rightarrow$ `OrderRead` | `201 Created` | Passation de commande, figeage des tarifs, décrémentation des stocks et assignation du statut `En attente de validation`. |
+| `GET` | `/api/v1/commandes/me` | Client | — $\rightarrow$ `List[OrderRead]` | `200 OK` | Historique personnel des commandes passées par le client authentifié. |
+| `GET` | `/api/v1/commandes/{id}` | Client / Employé / Admin | Path param : `id` $\rightarrow$ `OrderRead` | `200 OK` | Suivi détaillé d'une commande et consultation de la frise chronologique des statuts. |
+| `PATCH` | `/api/v1/commandes/{id}/statut` | Employé / Admin | `OrderStatusUpdate` $\rightarrow$ `OrderRead` | `200 OK` | Transition ordonnée du cycle de vie logistique (`Acceptée` $\rightarrow$ `En préparation` $\rightarrow$ `En cours de livraison` $\rightarrow$ `Livrée` $\rightarrow$ `Terminée`). |
+| `POST` | `/api/v1/commandes/{id}/annuler` | Client / Employé | `CancelOrderRequest` $\rightarrow$ `OrderRead` | `200 OK` | Annulation autonome par le client (avant acceptation) ou annulation par l'employé avec motif obligatoire et contact préalable. |
+| `GET` | `/api/v1/admin/stats` | Admin | Query params : `annee`, `mois` $\rightarrow$ `StatsResponse` | `200 OK` | Pipeline d'agrégation MongoDB (`commandes_stats`) retournant les volumes de vente et le chiffre d'affaires consolidé. |
