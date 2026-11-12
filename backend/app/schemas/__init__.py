@@ -1,5 +1,5 @@
 from app.schemas.auth import LoginRequest, Token, TokenPayload
-from app.schemas.user import UserResponse, UserBase
+from app.schemas.user import UserResponse, UserBase, UserCreate, UserUpdate
 from app.schemas.order import (
     OrderItemCreate,
     OrderDetailRead,
@@ -29,6 +29,20 @@ from app.schemas.stats import (
     MonthlyRevenueStat,
     AdminStatsResponse,
 )
+from app.schemas.avis import (
+    AvisNotes,
+    AvisCreate,
+    AvisModerationUpdate,
+    AvisRead,
+)
+from app.schemas.horaire import (
+    HoraireRead,
+    HoraireUpdate,
+)
+from app.schemas.contact import (
+        ContactCreate,
+        ContactRead,
+)
 
 __all__ = [
     "LoginRequest",
@@ -36,6 +50,8 @@ __all__ = [
     "TokenPayload",
     "UserResponse",
     "UserBase",
+    "UserCreate",
+    "UserUpdate",
     "OrderItemCreate",
     "OrderDetailRead",
     "QuoteRequest",
@@ -59,4 +75,12 @@ __all__ = [
     "TopMenuStat",
     "MonthlyRevenueStat",
     "AdminStatsResponse",
+    "AvisNotes",
+    "AvisCreate",
+    "AvisModerationUpdate",
+    "AvisRead",
+    "HoraireRead",
+    "HoraireUpdate",
+    "ContactCreate",
+    "ContactRead",
 ]

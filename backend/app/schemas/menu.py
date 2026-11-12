@@ -32,6 +32,23 @@ class PlatRead(PlatBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class PlatCreate(PlatBase):
+    """Payload de création d'un plat avec ses associations taxonomiques."""
+    allergene_ids: List[int] = Field(default=[], description="IDs des allergènes présents")
+    regime_ids: List[int] = Field(default=[], description="IDs des régimes compatibles")
+    theme_ids: List[int] = Field(default=[], description="IDs des thèmes associés")
+
+
+class PlatUpdate(BaseModel):
+    """Mise à jour partielle d'un plat."""
+    titre: Optional[str] = Field(None, max_length=50)
+    type_de_plat: Optional[DishType] = None
+    images_url: Optional[str] = None
+    allergene_ids: Optional[List[int]] = None
+    regime_ids: Optional[List[int]] = None
+    theme_ids: Optional[List[int]] = None
+    
+
 # --- Schémas Menus ---
 
 class MenuBase(BaseModel):
