@@ -1,13 +1,30 @@
-from datetime import date, time
+from datetime import date, time, datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.entities import OrderStatus, PaymentStatus, Equipment, ContactMode
+
+
+# --- Lignes de commande (Items / Détails) ---
 
 class OrderItemCreate(BaseModel):
-    """Ligne de commande (menu et nombre de convives)."""
+    """Ligne de commande envoyée par le client (menu et nombre de convives)."""
     menu_id: int
     quantite: int = Field(..., gt=0, description="Nombre de personnes pour ce menu")
 
+
+class OrderDetailRead(BaseModel):
+    """Détail d'une ligne de commande enregistrée."""
+    detail_id: int
+    menu_id: int
+    menu_titre: Optional[str] = None
+    quantite: int
+    prix_applique: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Simulation de devis (P3-04) ---
 
 class QuoteRequest(BaseModel):
     """Demande de simulation de devis / calcul de panier."""
@@ -26,8 +43,67 @@ class QuoteResponse(BaseModel):
 
 
 class EquipmentPenaltyCheck(BaseModel):
-    """Contrôle d'échéance de restitution du matériel."""
+    """Contrôle d'échéance de restitution du matériel (RG-04)."""
     date_prestation: date
     jours_ecoules: int
     depassement: bool
     penalite_forfaitaire: float = Field(600.0, description="Montant de la pénalité forfaitaire en euros")
+
+
+# --- Passation et Consultation de Commande (P3-05) ---
+
+class OrderCreate(BaseModel):
+    """Payload pour créer une commande dans le tunnel d'achat."""
+    date_prestation: date = Field(..., description="Date prévue de la prestation traiteur")
+    heure_livraison: time = Field(..., description="Heure souhaitée de livraison (ex: 12:30:00)")
+    adresse_livraison: str = Field(..., min_length=5, max_length=255, description="Adresse complète de livraison")
+    distance_km: float = Field(0.0, ge=0.0, description="Distance kilométrique depuis le restaurant")
+    items: List[OrderItemCreate] = Field(..., min_length=1, description="Liste des menus commandés")
+
+
+class OrderRead(BaseModel):
+    """Vue détaillée d'une commande pour le suivi client et l'espace employé."""
+    commande_id: int
+    numero_commande: str
+    user_id: int
+    date_prestation: date
+    heure_livraison: time
+    adresse_livraison: Optional[str] = None
+    distance_km: float
+    frais_livraison: float
+    remise_appliquee: float
+    prix_total: float
+    statut: OrderStatus
+    statut_paiement: PaymentStatus
+    statut_materiel: Equipment
+    date_commande: Optional[datetime] = None
+    motif_annulation: Optional[str] = None
+    mode_contact_annulation: Optional[ContactMode] = None
+    contact_client_effectue: bool = False
+    created_at: Optional[datetime] = None
+    details: List[OrderDetailRead] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderUpdate(BaseModel):
+    """Modification logistique et/ou des quantités par le client avant acceptation (hors changement de menu)."""
+    date_prestation: Optional[date] = Field(None, description="Nouvelle date de prestation")
+    heure_livraison: Optional[time] = Field(None, description="Nouvelle heure de livraison")
+    adresse_livraison: Optional[str] = Field(None, min_length=5, max_length=255)
+    distance_km: Optional[float] = Field(None, ge=0.0)
+    items: Optional[List[OrderItemCreate]] = Field(None, min_length=1, description="Nouvelles quantités (mêmes menus uniquement)")
+
+
+class OrderStatusUpdate(BaseModel):
+    """Payload pour la mise à jour des statuts par un employé ou administrateur."""
+    nouveau_statut: Optional[OrderStatus] = Field(None, description="Nouvel état logistique")
+    statut_paiement: Optional[PaymentStatus] = Field(None, description="Mise à jour du statut de règlement")
+    statut_materiel: Optional[Equipment] = Field(None, description="Mise à jour du statut du matériel consigné")
+
+
+class OrderCancelRequest(BaseModel):
+    """Payload pour l'annulation d'une commande."""
+    motif_annulation: Optional[str] = Field(None, max_length=500, description="Motif de l'annulation")
+    mode_contact_annulation: Optional[ContactMode] = Field(None, description="Téléphone ou Email (obligatoire si employé)")
+    contact_client_effectue: bool = Field(False, description="Confirmation que le client a bien été prévenu")
