@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field 
 from app.models.entities import UserRole
 
 
@@ -21,3 +21,17 @@ class TokenPayload(BaseModel):
     role: UserRole
     exp: int
     iat: Optional[int] = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    nouveau_password: str = Field(..., min_length=10, max_length=100)
+
+
+class ChangePasswordRequest(BaseModel):
+    ancien_password: str
+    nouveau_password: str = Field(..., min_length=10, max_length=100)

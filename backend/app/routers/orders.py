@@ -246,6 +246,75 @@ def get_my_orders(
 
 
 @router.get(
+    "/admin/toutes",
+    response_model=List[OrderRead],
+    summary="Liste et filtrage des commandes pour le suivi opérationnel (Employé / Admin)"
+)
+def list_all_orders_backoffice(
+    statut: Optional[OrderStatus] = Query(None, description="Filtrer sur un statut précis"),
+    actives_uniquement: bool = Query(True, description="Si vrai et sans statut précis, exclut les commandes 'Terminée' et 'Annulée'"),
+    client_id: Optional[int] = Query(None, description="Filtrer par identifiant client"),
+    current_user: Utilisateur = Depends(require_employe),
+    db: Session = Depends(get_db)
+):
+    """
+    Permet aux Employés et Administrateurs de suivre les commandes à traiter :
+    - Par défaut (actives_uniquement=True), retourne toutes les commandes en cours (non terminées / non annulées)
+    - Permet le filtrage ciblé par statut exact ou par client (cahier des charges Espace Employé).
+    """
+    stmt = (
+        select(Commande)
+        .where(Commande.is_deleted.is_(False))
+        .options(selectinload(Commande.details).selectinload(CommandeDetail.menu))
+        .order_by(Commande.date_prestation.asc(), Commande.heure_livraison.asc())
+    )
+
+    if statut is not None:
+        stmt = stmt.where(Commande.statut == statut)
+    elif actives_uniquement:
+        stmt = stmt.where(Commande.statut.notin_([OrderStatus.COMPLETED, OrderStatus.CANCELLED]))
+
+    if client_id is not None:
+        stmt = stmt.where(Commande.user_id == client_id)
+
+    commandes = db.execute(stmt).scalars().all()
+
+    return [
+        OrderRead(
+            commande_id=c.commande_id,
+            numero_commande=c.numero_commande,
+            user_id=c.user_id,
+            date_prestation=c.date_prestation,
+            heure_livraison=c.heure_livraison,
+            adresse_livraison=c.adresse_livraison,
+            distance_km=c.distance_km,
+            frais_livraison=c.frais_livraison,
+            remise_appliquee=c.remise_appliquee,
+            prix_total=c.prix_total,
+            statut=c.statut,
+            statut_paiement=c.statut_paiement,
+            statut_materiel=c.statut_materiel,
+            date_commande=c.date_commande,
+            motif_annulation=c.motif_annulation,
+            mode_contact_annulation=c.mode_contact_annulation,
+            contact_client_effectue=c.contact_client_effectue,
+            created_at=c.created_at,
+            details=[
+                OrderDetailRead(
+                    detail_id=d.detail_id,
+                    menu_id=d.menu_id,
+                    menu_titre=d.menu.titre if d.menu else "Menu archivé",
+                    quantite=d.quantite,
+                    prix_applique=d.prix_applique
+                )
+                for d in c.details
+            ]
+        )
+        for c in commandes
+    ]
+
+
+@router.get(
     "/{commande_id}",
     response_model=OrderRead,
     summary="Suivi détaillé d'une commande par identifiant"
