@@ -43,15 +43,14 @@
 
 ---
 
-## 5. Endpoints en Cours de Développement (Phase 3 - P3-05)
+#### 5. Tunnel de Commande, Logistique & Statistiques NoSQL (`/commandes`, `/admin/stats`)
 
-Les points d'accès ci-dessous formalisent les contrats du tunnel de commande, de la logistique et du reporting décisionnel :
-
-| Méthode | Point d'Accès | Rôle Minimum | Modèle Request / Response | Statut Cible | Rôle Métier |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/commandes` | Client | `OrderCreate` $\rightarrow$ `OrderRead` | `201 Created` | Passation de commande, figeage des tarifs, décrémentation des stocks et assignation du statut `En attente de validation`. |
-| `GET` | `/api/v1/commandes/me` | Client | — $\rightarrow$ `List[OrderRead]` | `200 OK` | Historique personnel des commandes passées par le client authentifié. |
-| `GET` | `/api/v1/commandes/{id}` | Client / Employé / Admin | Path param : `id` $\rightarrow$ `OrderRead` | `200 OK` | Suivi détaillé d'une commande et consultation de la frise chronologique des statuts. |
-| `PATCH` | `/api/v1/commandes/{id}/statut` | Employé / Admin | `OrderStatusUpdate` $\rightarrow$ `OrderRead` | `200 OK` | Transition ordonnée du cycle de vie logistique (`Acceptée` $\rightarrow$ `En préparation` $\rightarrow$ `En cours de livraison` $\rightarrow$ `Livrée` $\rightarrow$ `Terminée`). |
-| `POST` | `/api/v1/commandes/{id}/annuler` | Client / Employé | `CancelOrderRequest` $\rightarrow$ `OrderRead` | `200 OK` | Annulation autonome par le client (avant acceptation) ou annulation par l'employé avec motif obligatoire et contact préalable. |
-| `GET` | `/api/v1/admin/stats` | Admin | Query params : `annee`, `mois` $\rightarrow$ `StatsResponse` | `200 OK` | Pipeline d'agrégation MongoDB (`commandes_stats`) retournant les volumes de vente et le chiffre d'affaires consolidé. |
+| Méthode | Point d'Accès | Rôle Minimum | Paramètres / Corps de Requête | Modèle de Réponse (Response DTO) | Statut HTTP | Description Métier |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/commandes` | Client | `OrderCreate` (date, heure, adresse, distance, `items`) | `OrderRead` | `201 Created`<br>`400 Bad Request` | Passation de commande ferme, calcul tarifaire (RG-01 à RG-03), décrémentation des stocks et génération du numéro `CMD-AAAA-XXXX`. |
+| `GET` | `/api/v1/commandes/me` | Client | — | `List[OrderRead]` | `200 OK` | Historique chronologique personnel des commandes passées par le client connecté. |
+| `GET` | `/api/v1/commandes/{id}` | Client / Employé / Admin | Path param : `id` (int) | `OrderRead` | `200 OK`<br>`403 Forbidden` | Suivi détaillé d'une commande avec cloisonnement de sécurité (un client ne voit que ses propres commandes). |
+| `PATCH` | `/api/v1/commandes/{id}` | Client | Query params (`date_prestation`, `heure_livraison`, `adresse_livraison`, `distance_km`, `quantite`) et/ou `OrderUpdate` | `OrderRead` | `200 OK`<br>`400 Bad Request` | Modification logistique et des quantités avant acceptation (`En attente de validation`), avec blocage strict du changement de menu et recalcul des tarifs/stocks. |
+| `PATCH` | `/api/v1/commandes/{id}/statut` | Employé / Admin | `OrderStatusUpdate` (`nouveau_statut`, `statut_paiement`, `statut_materiel`) | `OrderRead` | `200 OK`<br>`400 Bad Request` | Transition ordonnée du cycle de vie <br>(`Acceptée`  `En préparation`  `En cours de livraison`  `Livrée`  `Terminée`), contrôle de clôture (règlement + matériel restitué) et synchronisation asynchrone vers MongoDB `commandes_stats`. |
+| `POST` | `/api/v1/commandes/{id}/annuler` | Client / Employé / Admin | `OrderCancelRequest` (optionnel pour client ; motif, mode contact et confirmation obligatoires pour employé) | `OrderRead` | `200 OK`<br>`400 Bad Request` | Annulation autonome client avant acceptation ou annulation employée avec traçabilité de contact, et restitution automatique des stocks. |
+| `GET` | `/api/v1/admin/stats` | Admin | Query param : `annee` (int, optionnel) | `AdminStatsResponse` | `200 OK`<br>`403 Forbidden` | Pipelines d'agrégation MongoDB (`commandes_stats`) retournant les KPIs financiers (CA HT/TVA/TTC, panier moyen), le classement des menus (`$unwind`) et l'évolution mensuelle. |
