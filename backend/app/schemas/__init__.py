@@ -23,6 +23,12 @@ from app.schemas.menu import (
     MenuDetail,
     CatalogueFilters,
 )
+from app.schemas.stats import (
+    GlobalKPIs,
+    TopMenuStat,
+    MonthlyRevenueStat,
+    AdminStatsResponse,
+)
 
 __all__ = [
     "LoginRequest",
@@ -49,4 +55,8 @@ __all__ = [
     "MenuListItem",
     "MenuDetail",
     "CatalogueFilters",
+    "GlobalKPIs",
+    "TopMenuStat",
+    "MonthlyRevenueStat",
+    "AdminStatsResponse",
 ]

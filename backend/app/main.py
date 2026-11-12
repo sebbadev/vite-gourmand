@@ -8,6 +8,7 @@ from app.core.database import get_db, get_mongo_db
 from app.routers.auth import router as auth_router
 from app.routers.orders import router as orders_router
 from app.routers.menus import router as menus_router
+from app.routers.stats import router as stats_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -30,6 +31,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(orders_router, prefix=settings.API_V1_STR)
 app.include_router(menus_router, prefix=settings.API_V1_STR)
+app.include_router(stats_router, prefix=settings.API_V1_STR)
 
 @app.get("/", tags=["Health Check"])
 async def health_check(
