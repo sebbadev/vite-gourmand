@@ -84,3 +84,26 @@ class OrderRead(BaseModel):
     details: List[OrderDetailRead] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class OrderUpdate(BaseModel):
+    """Modification logistique et/ou des quantités par le client avant acceptation (hors changement de menu)."""
+    date_prestation: Optional[date] = Field(None, description="Nouvelle date de prestation")
+    heure_livraison: Optional[time] = Field(None, description="Nouvelle heure de livraison")
+    adresse_livraison: Optional[str] = Field(None, min_length=5, max_length=255)
+    distance_km: Optional[float] = Field(None, ge=0.0)
+    items: Optional[List[OrderItemCreate]] = Field(None, min_length=1, description="Nouvelles quantités (mêmes menus uniquement)")
+
+
+class OrderStatusUpdate(BaseModel):
+    """Payload pour la mise à jour des statuts par un employé ou administrateur."""
+    nouveau_statut: Optional[OrderStatus] = Field(None, description="Nouvel état logistique")
+    statut_paiement: Optional[PaymentStatus] = Field(None, description="Mise à jour du statut de règlement")
+    statut_materiel: Optional[Equipment] = Field(None, description="Mise à jour du statut du matériel consigné")
+
+
+class OrderCancelRequest(BaseModel):
+    """Payload pour l'annulation d'une commande."""
+    motif_annulation: Optional[str] = Field(None, max_length=500, description="Motif de l'annulation")
+    mode_contact_annulation: Optional[ContactMode] = Field(None, description="Téléphone ou Email (obligatoire si employé)")
+    contact_client_effectue: bool = Field(False, description="Confirmation que le client a bien été prévenu")
