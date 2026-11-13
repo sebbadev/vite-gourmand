@@ -1,0 +1,79 @@
+<section class="container contact-wrapper" aria-labelledby="contact-title">
+  <div class="contact-header">
+    <h1 id="contact-title">Contactez Vite &amp; Gourmand</h1>
+    <p>Une question sur un menu, une allergie ou un événement sur mesure ? Écrivez-nous directement.</p>
+  </div>
+
+  @if (succesMessage()) {
+    <div class="alert alert-success" role="status">{{ succesMessage() }}</div>
+  }
+  @if (erreurMessage()) {
+    <div class="alert alert-danger" role="alert">{{ erreurMessage() }}</div>
+  }
+
+  <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form" novalidate>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="prenom">Prénom *</label>
+        <input id="prenom" type="text" formControlName="prenom" autocomplete="given-name" />
+        @if (contactForm.controls.prenom.touched && contactForm.controls.prenom.invalid) {
+          <small class="error-text">Le prénom est requis (2 caractères minimum).</small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="nom">Nom *</label>
+        <input id="nom" type="text" formControlName="nom" autocomplete="family-name" />
+        @if (contactForm.controls.nom.touched && contactForm.controls.nom.invalid) {
+          <small class="error-text">Le nom est requis (2 caractères minimum).</small>
+        }
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="email">Adresse email *</label>
+        <input id="email" type="email" formControlName="email" autocomplete="email" />
+        @if (contactForm.controls.email.touched && contactForm.controls.email.invalid) {
+          <small class="error-text">Veuillez saisir une adresse email valide.</small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="telephone">Téléphone (optionnel)</label>
+        <input id="telephone" type="tel" formControlName="telephone" autocomplete="tel" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="objet">Objet de votre demande *</label>
+      <input id="objet" type="text" formControlName="objet" placeholder="Ex : Devis réception 40 personnes" />
+      @if (contactForm.controls.objet.touched && contactForm.controls.objet.invalid) {
+        <small class="error-text">L'objet est requis (3 à 120 caractères).</small>
+      }
+    </div>
+
+    <div class="form-group">
+      <label for="message">Votre message *</label>
+      <textarea id="message" rows="5" formControlName="message"></textarea>
+      @if (contactForm.controls.message.touched && contactForm.controls.message.invalid) {
+        <small class="error-text">Votre message doit contenir au moins 10 caractères.</small>
+      }
+    </div>
+
+    <div class="form-group checkbox-group">
+      <input id="rgpd_consent" type="checkbox" formControlName="rgpd_consent" />
+      <label for="rgpd_consent">
+        J'accepte que mes informations soient traitées par Vite &amp; Gourmand pour répondre à ma demande,
+        conformément au RGPD (Règlement Général sur la Protection des Données). *
+      </label>
+    </div>
+    @if (contactForm.controls.rgpd_consent.touched && contactForm.controls.rgpd_consent.invalid) {
+      <small class="error-text">Le consentement RGPD est obligatoire pour envoyer ce formulaire.</small>
+    }
+
+    <button type="submit" class="btn-submit" [disabled]="envoiEnCours()">
+      {{ envoiEnCours() ? 'Envoi en cours...' : 'Envoyer mon message' }}
+    </button>
+  </form>
+</section>

@@ -1,0 +1,74 @@
+<!-- Section 1 : Héro -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container hero-content">
+    <span class="hero-badge">Traiteur Événementiel à Bordeaux • Depuis 25 ans</span>
+    <h1 id="hero-title">L'art de recevoir, la gourmandise en plus</h1>
+    <p class="hero-lead">
+      Mariages, réceptions privées, repas de fêtes ou séminaires d'entreprise : Julie, José et toute
+      leur équipe composent des menus faits maison à partir de produits frais et de saison.
+    </p>
+    <div class="hero-actions">
+      <a routerLink="/catalogue" class="btn-primary">Découvrir nos menus</a>
+      <a routerLink="/contact" class="btn-secondary">Demander un renseignement</a>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2 : L'équipe et son professionnalisme -->
+<section class="container section-block" aria-labelledby="equipe-title">
+  <h2 id="equipe-title" class="section-title">Une équipe passionnée à votre service</h2>
+  <div class="features-grid">
+    <article class="card">
+      <h3>Julie &amp; José, Fondateurs</h3>
+      <p>
+        Depuis plus de 25 ans à Bordeaux, Julie et José orchestrent vos réceptions avec la même exigence :
+        des menus créatifs et généreux adaptés à chaque moment fort de l'année (Noël, Pâques, mariages).
+      </p>
+    </article>
+    <article class="card">
+      <h3>Savoir-faire Culinaire &amp; Sécurité</h3>
+      <p>
+        Nos chefs et commis sélectionnent des produits frais de saison et garantissent une traçabilité
+        rigoureuse des allergènes et régimes alimentaires (végétarien, vegan, sans gluten).
+      </p>
+    </article>
+    <article class="card">
+      <h3>Logistique &amp; Ponctualité</h3>
+      <p>
+        De la préparation en laboratoire jusqu'à la livraison sur site avec prêt de matériel professionnel,
+        notre équipe assure un service clé en main irréprochable.
+      </p>
+    </article>
+  </div>
+</section>
+
+<!-- Section 3 : Avis Clients (Données MongoDB via GET /api/v1/avis) -->
+<section class="reviews-section" aria-labelledby="reviews-title">
+  <div class="container">
+    <h2 id="reviews-title" class="section-title">Ce que nos clients disent de nous</h2>
+
+    @if (chargementAvis()) {
+      <p class="muted">Chargement des avis clients...</p>
+    } @else if (avisList().length > 0) {
+      <div class="features-grid">
+        @for (avis of avisList(); track avis.id) {
+          <article class="card review-card">
+            <div class="review-header">
+              <span class="review-author">{{ avis.client_nom || 'Client vérifié' }}</span>
+              <span class="review-score" aria-label="Note moyenne">
+                ★ {{ avis.notes.moyenne | number:'1.1-1' }}/5
+              </span>
+            </div>
+            <p class="review-text">« {{ avis.description }} »</p>
+            <footer class="review-meta">
+              <span>Qualité : {{ avis.notes.qualite }}/5 • Service : {{ avis.notes.service }}/5</span>
+              <time [attr.datetime]="avis.created_at">{{ avis.created_at | date:'dd/MM/yyyy' }}</time>
+            </footer>
+          </article>
+        }
+      </div>
+    } @else {
+      <p class="muted">Aucun avis publié pour le moment.</p>
+    }
+  </div>
+</section>
