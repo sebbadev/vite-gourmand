@@ -1,1 +1,72 @@
-/* You can add global styles to this file, and also import other style files */
+/* ==========================================================================
+   Charte Graphique "Vite & Gourmand" — Tokens & Accessibilité RGAA
+   ========================================================================== */
+
+:root {
+  /* Palette gastronomique chaleureuse à fort contraste (RGAA AA/AAA) */
+  --color-primary: #6b2737;        /* Bordeaux profond (contraste > 8:1 sur blanc) */
+  --color-primary-dark: #4a1925;
+  --color-secondary: #b86b28;      /* Ambre / Or chaud (accents et badges) */
+  --color-bg-page: #faf8f5;        /* Crème léger (fond général) */
+  --color-bg-surface: #ffffff;     /* Blanc pur (cartes et formulaires) */
+  --color-text-main: #1f2421;      /* Anthracite très foncé (contraste > 14:1) */
+  --color-text-muted: #525b56;     /* Gris soutenu (contraste > 6:1) */
+  --color-border: #e2dcd5;
+  --color-success: #1b6b3a;
+  --color-warning: #9a5b00;
+  --color-danger: #a61c1c;
+
+  /* Typographie & Espacements */
+  --font-heading: 'Georgia', 'Times New Roman', serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --shadow-card: 0 4px 14px rgba(31, 36, 33, 0.07);
+  --container-max: 1200px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text-main);
+  background-color: var(--color-bg-page);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  color: var(--color-primary-dark);
+  line-height: 1.25;
+  margin-top: 0;
+}
+
+/* Accessibilité RGAA : focus clavier bien visible sur tous les éléments interactifs */
+:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* Classe utilitaire pour masquer visuellement un élément tout en le laissant lu par les lecteurs d'écran */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: 1rem;
+  }

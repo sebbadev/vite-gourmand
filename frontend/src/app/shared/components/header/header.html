@@ -1,0 +1,51 @@
+<header class="site-header" role="banner">
+  <div class="container header-inner">
+    <a routerLink="/" class="brand" (click)="fermerMenu()" aria-label="Vite & Gourmand - Retour à l'accueil">
+      <span class="brand-title">Vite &amp; Gourmand</span>
+      <span class="brand-subtitle">Traiteur Événementiel</span>
+    </a>
+
+    <!-- Bouton Burger Mobile (RGAA : aria-expanded et aria-controls) -->
+    <button
+      type="button"
+      class="burger-btn"
+      [attr.aria-expanded]="menuOuvert()"
+      aria-controls="main-navigation"
+      (click)="toggleMenu()"
+    >
+      <span class="sr-only">Ouvrir ou fermer le menu de navigation</span>
+      <span aria-hidden="true">{{ menuOuvert() ? '✕' : '☰' }}</span>
+    </button>
+
+    <nav
+      id="main-navigation"
+      class="main-nav"
+      [class.is-open]="menuOuvert()"
+      aria-label="Navigation principale"
+    >
+      <ul class="nav-list">
+        <li>
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="fermerMenu()">
+            Accueil
+          </a>
+        </li>
+        <li>
+          <a routerLink="/catalogue" routerLinkActive="active" (click)="fermerMenu()">
+            Nos Menus
+          </a>
+        </li>
+        <li>
+          <a routerLink="/contact" routerLinkActive="active" (click)="fermerMenu()">
+            Contact
+          </a>
+        </li>
+        <!-- Les liens dynamiques (Panier, Connexion, Espaces Client/Employé/Admin) seront branchés en P4-03 -->
+        <li class="nav-cta">
+          <a routerLink="/connexion" class="btn-outline" (click)="fermerMenu()">
+            Connexion
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>

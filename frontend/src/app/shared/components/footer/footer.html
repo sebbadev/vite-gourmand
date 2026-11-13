@@ -1,0 +1,44 @@
+<footer class="site-footer" role="contentinfo">
+  <div class="container footer-grid">
+    <section aria-labelledby="footer-brand">
+      <h2 id="footer-brand" class="footer-heading">Vite &amp; Gourmand</h2>
+      <p>
+        Votre traiteur événementiel à Bordeaux depuis 25 ans. Cuisine maison, produits frais de saison
+        et prestations sur mesure pour vos réceptions privées et professionnelles.
+      </p>
+    </section>
+
+    <section aria-labelledby="footer-hours">
+      <h2 id="footer-hours" class="footer-heading">Horaires d'ouverture</h2>
+      @if (chargementHoraires()) {
+        <p class="muted">Chargement des horaires...</p>
+      } @else if (horaires().length > 0) {
+        <ul class="hours-list">
+          @for (h of horaires(); track h.horaire_id) {
+            <li>
+              <span class="day">{{ h.jour }} :</span>
+              <span>{{ h.heure_ouverture.slice(0, 5) }} - {{ h.heure_fermeture.slice(0, 5) }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">Du mardi au dimanche, sur réservation.</p>
+      }
+    </section>
+
+    <section aria-labelledby="footer-links">
+      <h2 id="footer-links" class="footer-heading">Navigation &amp; Informations</h2>
+      <ul class="links-list">
+        <li><a routerLink="/catalogue">Découvrir nos menus</a></li>
+        <li><a routerLink="/contact">Nous contacter / Devis</a></li>
+        <li><a routerLink="/mentions-legales">Mentions légales &amp; CGV</a></li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="container">
+      <p>&copy; {{ anneeCourante }} Vite &amp; Gourmand — Tous droits réservés.</p>
+    </div>
+  </div>
+</footer>
