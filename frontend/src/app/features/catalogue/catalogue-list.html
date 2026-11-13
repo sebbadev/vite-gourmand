@@ -1,0 +1,112 @@
+<section class="container catalogue-wrapper" aria-labelledby="catalogue-title">
+  <header class="catalogue-header">
+    <h1 id="catalogue-title">Nos Menus Traiteur</h1>
+    <p>Composez votre réception parmi nos créations de saison. Tous nos menus s'adaptent à vos convives.</p>
+  </header>
+
+  <!-- Barre de filtres dynamiques -->
+  <form [formGroup]="filterForm" class="filters-panel" aria-label="Filtrer les menus">
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label for="prix_max">Budget max / pers. (€)</label>
+        <input id="prix_max" type="number" min="1" step="1" formControlName="prix_max" placeholder="Ex : 45" />
+      </div>
+
+      <div class="filter-group">
+        <label for="nb_personnes">Nombre de convives</label>
+        <input id="nb_personnes" type="number" min="1" step="1" formControlName="nb_personnes" placeholder="Ex : 10" />
+      </div>
+
+      <div class="filter-group">
+        <label for="theme_id">Thème</label>
+        <select id="theme_id" formControlName="theme_id">
+          <option [ngValue]="null">Tous les thèmes</option>
+          @for (theme of referentiels().themes; track theme.id) {
+            <option [ngValue]="theme.id">{{ theme.libelle }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="regime_id">Régime alimentaire</label>
+        <select id="regime_id" formControlName="regime_id">
+          <option [ngValue]="null">Tous les régimes</option>
+          @for (regime of referentiels().regimes; track regime.id) {
+            <option [ngValue]="regime.id">{{ regime.libelle }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="sans_allergene_id">Exclure un allergène</label>
+        <select id="sans_allergene_id" formControlName="sans_allergene_id">
+          <option [ngValue]="null">Aucune exclusion</option>
+          @for (allergene of referentiels().allergenes; track allergene.id) {
+            <option [ngValue]="allergene.id">Sans {{ allergene.libelle }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="filters-footer">
+      <span class="results-count" role="status">
+        {{ menus().length }} menu{{ menus().length > 1 ? 's' : '' }} disponible{{ menus().length > 1 ? 's' : '' }}
+      </span>
+      <button type="button" class="btn-reset" (click)="reinitialiserFiltres()">
+        Réinitialiser les filtres
+      </button>
+    </div>
+  </form>
+
+  <!-- États de chargement / erreur / grille de résultats -->
+  @if (erreurMessage()) {
+    <div class="alert-danger" role="alert">{{ erreurMessage() }}</div>
+  } @else if (chargement()) {
+    <p class="status-text">Recherche des menus correspondants...</p>
+  } @else if (menus().length === 0) {
+    <div class="empty-state">
+      <p>Aucun menu ne correspond à cette combinaison de critères.</p>
+      <button type="button" class="btn-primary" (click)="reinitialiserFiltres()">Voir tous les menus</button>
+    </div>
+  } @else {
+    <div class="menus-grid">
+      @for (menu of menus(); track menu.menu_id) {
+        <article class="menu-card">
+          <div class="menu-card-media">
+            <img 
+              [src]="menu.images_url" 
+              [alt]="'Illustration du menu ' + menu.titre" 
+              loading="lazy"
+            />
+            <span class="price-badge">{{ menu.prix_par_personne | currency:'EUR':'symbol':'1.2-2' }} / pers.</span>
+          </div>
+
+          <div class="menu-card-body">
+            <div class="badges-row">
+              @for (theme of menu.themes; track theme.id) {
+                <span class="badge badge-theme">{{ theme.libelle }}</span>
+              }
+              @for (regime of menu.regimes; track regime.id) {
+                <span class="badge badge-regime">{{ regime.libelle }}</span>
+              }
+            </div>
+
+            <h2>{{ menu.titre }}</h2>
+            <p class="menu-desc">{{ menu.description }}</p>
+
+            <div class="menu-meta">
+              <span>Minimum : <strong>{{ menu.nombre_personnes_min }} personnes</strong></span>
+              <span [class.low-stock]="menu.quantite_disponible <= 5">
+                {{ menu.quantite_disponible > 0 ? menu.quantite_disponible + ' en stock' : 'Épuisé' }}
+              </span>
+            </div>
+
+            <a [routerLink]="['/catalogue', menu.menu_id]" class="btn-details">
+              Voir le détail du menu
+            </a>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>
