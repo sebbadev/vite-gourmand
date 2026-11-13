@@ -42,32 +42,3 @@ app.include_router(avis_router, prefix=settings.API_V1_STR)
 app.include_router(admin_users_router, prefix=settings.API_V1_STR)
 app.include_router(horaires_router, prefix=settings.API_V1_STR)
 app.include_router(contact_router, prefix=settings.API_V1_STR)
-
-@app.get("/", tags=["Health Check"])
-async def health_check(
-    db: Session = Depends(get_db),
-    mongo = Depends(get_mongo_db)
-):
-    pg_status = "error"
-    try:
-        db.execute(text("SELECT 1"))
-        pg_status = "connected"
-    except Exception as e:
-        pg_status = f"unreachable: {str(e)}"
-
-    mongo_status = "error"
-    try:
-        await mongo.command("ping")
-        mongo_status = "connected"
-    except Exception as e:
-        mongo_status = f"unreachable: {str(e)}"
-
-    return {
-        "status": "online",
-        "projet": settings.PROJECT_NAME,
-        "env": settings.ENVIRONMENT,
-        "databases": {
-            "postgresql": pg_status,
-            "mongodb": mongo_status
-        }
-    }
