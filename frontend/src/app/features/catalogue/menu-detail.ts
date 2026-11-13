@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { CatalogueService } from '../../core/services/catalogue.service';
 import { AuthService } from '../../core/services/auth.service';
 import { MenuDetail } from '../../core/models';
+import { CartService } from '../../core/services/cart.service';
 
 export interface GalleryPhoto {
   url: string;
@@ -23,7 +24,8 @@ export class MenuDetailPage implements OnInit {
   private readonly router = inject(Router);
   private readonly catalogueService = inject(CatalogueService);
   private readonly authService = inject(AuthService);
-
+  private readonly cartService = inject(CartService);
+  
   menu = signal<MenuDetail | null>(null);
   chargement = signal(true);
   erreurMessage = signal<string | null>(null);
@@ -94,18 +96,15 @@ export class MenuDetailPage implements OnInit {
     if (!currentMenu) return;
 
     const quantiteValide = Math.max(this.nbConvives(), currentMenu.nombre_personnes_min);
+    this.cartService.addOrUpdateMenu(currentMenu, quantiteValide);
 
     if (!this.authService.isAuthenticated) {
       this.router.navigate(['/connexion'], {
-        queryParams: { returnUrl: `/catalogue/${currentMenu.menu_id}` }
+        queryParams: { returnUrl: '/panier' }
       });
       return;
     }
 
-    localStorage.setItem(
-      'vg_pending_selection',
-      JSON.stringify({ menu_id: currentMenu.menu_id, quantite: quantiteValide })
-    );
     this.router.navigate(['/panier']);
   }
 }

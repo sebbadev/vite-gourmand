@@ -45,6 +45,9 @@
             <li>
               <a routerLink="/panier" routerLinkActive="active" (click)="fermerMenu()">
                 Panier
+                @if (cartCount$ | async; as count) {
+                  <span class="cart-badge" aria-label="Nombre de menus dans le panier">{{ count }}</span>
+                }
               </a>
             </li>
             <li>
@@ -79,7 +82,10 @@
           <li>
             <a routerLink="/panier" routerLinkActive="active" (click)="fermerMenu()">
               Panier
-            </a>
+              @if (cartCount$ | async; as count) {
+                <span class="cart-badge" aria-label="Nombre de menus dans le panier">{{ count }}</span>
+              }
+            </a> 
           </li>
           <li class="nav-cta">
             <a routerLink="/connexion" class="btn-outline" (click)="fermerMenu()">
