@@ -13,8 +13,6 @@ Il sert de guide pour les itérations de développement des fonctionnalités du 
 
 ### PHASES DU PROJET
 
-### (3 - 4 nov)
-
 ## PHASE 0 [P0]: ANALYSE & INITIATION DU PROJET
 
 * P0-00 Document d'initiation projet - demande du client - pdf
@@ -63,7 +61,6 @@ Il sert de guide pour les itérations de développement des fonctionnalités du 
 
 ---
 
-### (5 - 8 nov)
 
 ## PHASE 3 [P3]: DÉVELOPPEMENT CORE BACKEND (FASTAPI)
 
@@ -97,42 +94,35 @@ Il sert de guide pour les itérations de développement des fonctionnalités du 
 
 ---
 
-### (9 - 13 nov)
 
-## PHASE 4 [P4]: DÉVELOPPEMENT CORE FRONTEND (ANGULAR)
-
-* P4-01 Initialisation Angular (CLI, standalone components, SCSS, configuration proxy API)
-* P4-02 Maquettes & Intégration UI responsive
-	* Charte graphique "Vite & Gourmand" (palette, typographie accessible)
-	* Header / Navbar adaptative selon le rôle / Footer
-
-
-* P4-03 Catalogue & Filtres dynamiques
-	* Affichage des cartes menus
-	* Filtres combinés temps réel (prix min/max, thèmes, régimes)
-
-
-* P4-04 Tunnel d'achat & Panier
-	* Service de gestion de panier réactif (`RxJS BehaviorSubject` + persistance `localStorage`)
-	* Écran récapitulatif avec application des règles de réduction et frais de livraison
-	* Validation de commande
-
-
-* P4-05 Authentification & Guards Angular
-	* Formulaires réactifs (Connexion / Inscription) avec validations strictes
-	* Intercepteur HTTP pour injecter le token JWT
-	* Route Guards (`AuthGuard`, `RoleGuard` pour isoler `/admin` et `/employe`)
-
-
-* P4-06 Interfaces Métier
-	* Dashboard Employé : mise à jour des statuts de commandes
-	* Dashboard Admin : gestion du catalogue et visualisations des stats
-
+#### PHASE 4 [P4]: DÉVELOPPEMENT CORE FRONTEND (ANGULAR)
+* P4-01 Initialisation Angular (CLI, standalone components, SCSS, configuration proxy API) [DONE]
+* P4-02 Socle UI, Charte SCSS, Modèles TypeScript & Layout Global
+    * Modèles TypeScript (DTOs alignés sur Pydantic dans `core/models/`)
+    * Charte graphique "Vite & Gourmand" (tokens SCSS, typographie accessible RGAA)
+    * Header / Navbar adaptative selon le rôle & Footer (horaires dynamiques via `GET /api/v1/horaires`)
+    * Page d'accueil (`Home` avec avis approuvés via `GET /api/v1/avis`) & Page Contact (`POST /api/v1/contact` + consentement RGPD)
+* P4-03 Authentification, Profil & Guards Angular
+    * `AuthService` réactif (RxJS `BehaviorSubject` + persistance `localStorage`)
+    * Formulaires réactifs (Connexion, Inscription, Mot de passe oublié / réinitialisation)
+    * Intercepteur HTTP fonctionnel (`jwtInterceptor`) pour injecter le Bearer Token
+    * Route Guards (`authGuard`, `roleGuard` pour isoler `/mon-compte`, `/employe` et `/admin`)
+* P4-04 Catalogue, Détail Menu & Filtres dynamiques
+    * Affichage des cartes menus (`GET /api/v1/menus`)
+    * Filtres combinés temps réel (prix max, nb personnes, thème, régime, exclusion allergènes via `GET /api/v1/menus/filtres`)
+    * Page détail d'un menu (`GET /api/v1/menus/{menu_id}`) avec plats associés et badges allergènes/régimes
+* P4-05 Tunnel d'achat, Panier & Espace Client
+    * `CartService` réactif (RxJS `BehaviorSubject` + persistance `localStorage`)
+    * Simulation de devis temps réel (`POST /api/v1/commandes/devis` : RG-01 à RG-03) et validation de commande (`POST /api/v1/commandes`)
+    * Espace Client : profil & changement de mot de passe (`PATCH /api/v1/auth/me`, `PATCH /api/v1/auth/me/password`)
+    * Suivi de commandes (`GET /api/v1/commandes/me`), modification/annulation avant acceptation et dépôt d'avis (`POST /api/v1/commandes/{id}/avis`)
+* P4-06 Interfaces Métier (Back-Office Employé & Admin)
+    * Espace Employé : suivi des commandes (`PATCH /statut`), gestion du matériel/litiges (RG-04), CRUD Menus/Plats, modération des avis, horaires et messages de contact
+    * Espace Admin : gestion des comptes employés (`GET/POST/PATCH /api/v1/admin/employees`) et tableau de bord analytique NoSQL (`GET /api/v1/admin/stats`)
 
 
 ---
 
-### (14 - 15 nov)
 
 ## PHASE 5 [P5]: STABILISATION & DÉPLOIEMENT
 
@@ -144,7 +134,6 @@ Il sert de guide pour les itérations de développement des fonctionnalités du 
 
 ---
 
-### (16 - 17 nov)
 
 ## PHASE 6 [P6]: DOCUMENTATION TECHNIQUE & UTILISATION
 
@@ -156,7 +145,6 @@ Il sert de guide pour les itérations de développement des fonctionnalités du 
 
 ---
 
-### (18 nov)
 
 ## PHASE 7 [P7]: RECETTE FINALE & GÉL DU CODE
 
