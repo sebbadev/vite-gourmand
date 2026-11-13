@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { CartService } from '../../../core/services/cart.service';
 
 @Component({
   selector: 'app-header',
@@ -12,9 +13,10 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class Header {
   private readonly authService = inject(AuthService);
+  private readonly cartService = inject(CartService);
 
-  // Flux réactif exposé directement au gabarit HTML
   readonly currentUser$ = this.authService.currentUser$;
+  readonly cartCount$ = this.cartService.count$;
 
   menuOuvert = signal(false);
 
