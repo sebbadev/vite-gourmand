@@ -1,4 +1,4 @@
-export type UserRole = 'Visiteur' | 'Client' | 'Employe' | 'Admin';
+export type UserRole = 'Visiteur' | 'Client' | 'Employé' | 'Administrateur';
 
 export interface User {
   user_id: number;
@@ -24,4 +24,44 @@ export interface LoginRequest {
 export interface TokenResponse {
   access_token: string;
   token_type: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  prenom: string;
+  nom: string;
+  telephone?: string;
+  adresse?: string;
+  code_postal?: string;
+  ville?: string;
+  pays?: string;
+}
+
+export interface UserUpdate {
+  prenom?: string;
+  nom?: string;
+  telephone?: string;
+  adresse?: string;
+  code_postal?: string;
+  ville?: string;
+  pays?: string;
+}
+
+export interface ChangePasswordRequest {
+  ancien_password: string;
+  nouveau_password: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  nouveau_password: string;
+}
+
+export interface MessageResponse {
+  message: string;
 }
