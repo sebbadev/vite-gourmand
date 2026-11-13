@@ -5,7 +5,6 @@
       <span class="brand-subtitle">Traiteur Événementiel</span>
     </a>
 
-    <!-- Bouton Burger Mobile (RGAA : aria-expanded et aria-controls) -->
     <button
       type="button"
       class="burger-btn"
@@ -39,12 +38,55 @@
             Contact
           </a>
         </li>
-        <!-- Les liens dynamiques (Panier, Connexion, Espaces Client/Employé/Admin) seront branchés en P4-03 -->
-        <li class="nav-cta">
-          <a routerLink="/connexion" class="btn-outline" (click)="fermerMenu()">
-            Connexion
-          </a>
-        </li>
+
+        <!-- Navigation conditionnelle selon l'état d'authentification et le rôle -->
+        @if (currentUser$ | async; as user) {
+          @if (user.role === 'Client') {
+            <li>
+              <a routerLink="/panier" routerLinkActive="active" (click)="fermerMenu()">
+                Panier
+              </a>
+            </li>
+            <li>
+              <a routerLink="/mon-compte" routerLinkActive="active" (click)="fermerMenu()">
+                Mon Espace ({{ user.prenom }})
+              </a>
+            </li>
+          }
+
+          @if (user.role === 'Employé' || user.role === 'Administrateur') {
+            <li>
+              <a routerLink="/employe" routerLinkActive="active" (click)="fermerMenu()">
+                Gestion Traiteur
+              </a>
+            </li>
+          }
+
+          @if (user.role === 'Administrateur') {
+            <li>
+              <a routerLink="/admin" routerLinkActive="active" (click)="fermerMenu()">
+                Administration
+              </a>
+            </li>
+          }
+
+          <li class="nav-cta">
+            <button type="button" class="btn-logout" (click)="seDeconnecter()">
+              Déconnexion
+            </button>
+          </li>
+        } @else {
+          <li>
+            <a routerLink="/panier" routerLinkActive="active" (click)="fermerMenu()">
+              Panier
+            </a>
+          </li>
+          <li class="nav-cta">
+            <a routerLink="/connexion" class="btn-outline" (click)="fermerMenu()">
+              Connexion
+            </a>
+          </li>
+        }
       </ul>
     </nav>
   </div>
