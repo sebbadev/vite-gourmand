@@ -71,10 +71,19 @@ export interface OrderDetailRead {
   prix_applique: number;
 }
 
+export interface OrderClientSummary {
+  user_id: number;
+  prenom: string;
+  nom: string;
+  email: string;
+  telephone?: string | null;
+}
+
 export interface OrderRead {
   commande_id: number;
   numero_commande: string;
   user_id: number;
+  client?: OrderClientSummary | null;
   date_prestation: string;
   heure_livraison: string;
   adresse_livraison?: string | null;
