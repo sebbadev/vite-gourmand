@@ -56,6 +56,10 @@ export class BackofficeService {
     return this.http.post<Plat>(`${this.apiUrl}/plats`, payload);
   }
 
+  updatePlat(platId: number, payload: Partial<PlatCreatePayload>): Observable<Plat> {
+    return this.http.put<Plat>(`${this.apiUrl}/plats/${platId}`, payload);
+  }
+  
   deletePlat(platId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/plats/${platId}`);
   }

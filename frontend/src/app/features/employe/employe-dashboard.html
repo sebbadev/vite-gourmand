@@ -296,6 +296,137 @@
         </form>
       </section>
     </div>
+    <hr class="section-divider" />
+
+    <!-- SECONDE PARTIE DE L'ONGLET CATALOGUE : GESTION DES PLATS -->
+    <div class="two-cols">
+      <section class="bo-card">
+        <h2>Plats enregistrés ({{ platsFiltres().length }})</h2>
+
+        <div class="plat-filters">
+          <select
+            aria-label="Filtrer les plats par catégorie"
+            [value]="filtreCategoriePlat()"
+            (change)="filtreCategoriePlat.set($any($event.target).value)"
+          >
+            <option value="">Toutes les catégories</option>
+            @for (dt of dishTypes; track dt) {
+              <option [value]="dt">{{ dt }}</option>
+            }
+          </select>
+
+          <input
+            type="search"
+            aria-label="Rechercher un plat par nom"
+            placeholder="Rechercher un plat..."
+            [value]="filtreRecherchePlat()"
+            (input)="filtreRecherchePlat.set($any($event.target).value)"
+          />
+        </div>
+
+        <div class="cards-stack">
+          @for (p of platsFiltres(); track p.plat_id) {
+            <div class="sub-item">
+              <div>
+                <strong>{{ p.titre }}</strong> <span class="status-pill">{{ p.type_de_plat }}</span>
+                <p class="muted-sm">
+                  Allergènes : {{ p.allergenes.length }} • Régimes : {{ p.regimes.length }} • Thèmes : {{ p.themes.length }}
+                </p>
+              </div>
+              <div class="ctrl-actions">
+                <button type="button" class="btn-outline-sm" (click)="editerPlat(p)">Modifier</button>
+                <button type="button" class="btn-danger-sm" (click)="supprimerPlat(p)">Supprimer</button>
+              </div>
+            </div>
+          } @empty {
+            <p class="muted-sm">Aucun plat ne correspond à ce filtre.</p>
+          }
+        </div>
+      </section>
+
+      <section class="bo-card">
+        <h2>{{ platEnEditionId() ? 'Modifier le plat' : 'Ajouter un nouveau plat' }}</h2>
+        <form [formGroup]="platForm" (ngSubmit)="sauvegarderPlat()" class="bo-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="p-titre">Nom du plat *</label>
+              <input id="p-titre" type="text" formControlName="titre" placeholder="Ex : Risotto aux cèpes" />
+            </div>
+
+            <div class="form-group">
+              <label for="p-type">Catégorie *</label>
+              <select id="p-type" formControlName="type_de_plat">
+                @for (dt of dishTypes; track dt) {
+                  <option [value]="dt">{{ dt }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="p-img">URL de la photo (optionnel)</label>
+            <input id="p-img" type="text" formControlName="images_url" />
+          </div>
+
+          <div class="form-group">
+            <label>Allergènes présents (sécurité alimentaire) :</label>
+            <div class="chips-wrap">
+              @for (a of referentiels().allergenes; track a.id) {
+                <button
+                  type="button"
+                  class="chip-btn"
+                  [class.is-selected]="selectedPlatAllergeneIds().includes(a.id)"
+                  (click)="toggleSelectionId(selectedPlatAllergeneIds, a.id)"
+                >
+                  {{ a.libelle }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Régimes alimentaires compatibles :</label>
+            <div class="chips-wrap">
+              @for (r of referentiels().regimes; track r.id) {
+                <button
+                  type="button"
+                  class="chip-btn"
+                  [class.is-selected]="selectedPlatRegimeIds().includes(r.id)"
+                  (click)="toggleSelectionId(selectedPlatRegimeIds, r.id)"
+                >
+                  {{ r.libelle }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Thèmes suggérés :</label>
+            <div class="chips-wrap">
+              @for (t of referentiels().themes; track t.id) {
+                <button
+                  type="button"
+                  class="chip-btn"
+                  [class.is-selected]="selectedPlatThemeIds().includes(t.id)"
+                  (click)="toggleSelectionId(selectedPlatThemeIds, t.id)"
+                >
+                  {{ t.libelle }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="ctrl-actions">
+            <button type="submit" class="btn-primary-sm" [disabled]="actionEnCours()">
+              {{ platEnEditionId() ? 'Enregistrer les modifications' : 'Ajouter le plat' }}
+            </button>
+            @if (platEnEditionId()) {
+              <button type="button" class="btn-outline-sm" (click)="annulerEditionPlat()">Annuler</button>
+            }
+          </div>
+        </form>
+      </section>
+    </div>
   }
 
   <!-- ONGLET 3 : MODÉRATION DES AVIS MONGODB -->
