@@ -7,6 +7,7 @@ from app.routers.avis import router as avis_router
 from app.routers.admin_users import router as admin_users_router
 from app.routers.horaires import router as horaires_router
 from app.routers.contact import router as contact_router
+from app.routers.referentiels import router as referentiels_router
 
 __all__ = [
     "auth_router",
@@ -18,4 +19,5 @@ __all__ = [
     "admin_users_router",
     "horaires_router",
     "contact_router",
+    "referentiels_router",
 ]
