@@ -1,0 +1,279 @@
+<section class="container admin-wrapper" aria-labelledby="admin-title">
+  <header class="admin-header">
+    <div>
+      <h1 id="admin-title">Espace Direction &amp; Pilotage</h1>
+      <p>Indicateurs financiers consolidés (MongoDB Analytics) et gestion des accès collaborateurs.</p>
+    </div>
+
+    <div class="header-actions">
+      <a routerLink="/employe" class="btn-outline-sm">Accéder au suivi opérationnel</a>
+      <nav class="tabs-nav" aria-label="Modules d'administration">
+        <button
+          type="button"
+          class="tab-btn"
+          [class.is-active]="ongletActif() === 'stats'"
+          (click)="ongletActif.set('stats')"
+        >
+          Tableau de Bord &amp; CA
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.is-active]="ongletActif() === 'equipe'"
+          (click)="ongletActif.set('equipe')"
+        >
+          Gestion des Employés ({{ employes().length }})
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.is-active]="ongletActif() === 'referentiels'"
+          (click)="ongletActif.set('referentiels')"
+        >
+          Régimes &amp; Thèmes
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  @if (messageSucces()) {
+    <div class="alert alert-success" role="status">{{ messageSucces() }}</div>
+  }
+  @if (messageErreur()) {
+    <div class="alert alert-danger" role="alert">{{ messageErreur() }}</div>
+  }
+
+  <!-- ONGLET 1 : TABLEAU DE BORD ANALYTIQUE (MONGODB) -->
+  @if (ongletActif() === 'stats') {
+    <div class="stats-toolbar admin-card">
+      <div>
+        <strong>Période d'analyse :</strong>
+        <span class="muted-sm">Données agrégées depuis la collection NoSQL <code>commandes_stats</code></span>
+      </div>
+      <div class="year-filter">
+        <label for="f-annee">Année :</label>
+        <select id="f-annee" (change)="changerAnneeStats($any($event.target).value)">
+          <option value="">Toutes les années</option>
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+        </select>
+      </div>
+    </div>
+
+    @if (chargementStats()) {
+      <p class="muted-sm">Exécution des pipelines d'agrégation MongoDB...</p>
+    } @else if (stats(); as st) {
+      <!-- Grille des KPIs financiers -->
+      <div class="kpi-grid">
+        <article class="kpi-card kpi-primary">
+          <span class="kpi-label">Chiffre d'Affaires TTC</span>
+          <strong class="kpi-value">{{ st.kpis_globaux.ca_ttc | currency:'EUR':'symbol':'1.2-2' }}</strong>
+          <small>Commandes clôturées : {{ st.kpis_globaux.nombre_commandes }}</small>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-label">Chiffre d'Affaires HT</span>
+          <strong class="kpi-value">{{ st.kpis_globaux.ca_ht | currency:'EUR':'symbol':'1.2-2' }}</strong>
+          <small>TVA collectée : {{ st.kpis_globaux.tva_collectee | currency:'EUR':'symbol':'1.2-2' }}</small>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-label">Panier Moyen TTC</span>
+          <strong class="kpi-value">{{ st.kpis_globaux.panier_moyen_ttc | currency:'EUR':'symbol':'1.2-2' }}</strong>
+          <small>Remises accordées : {{ st.kpis_globaux.total_remises | currency:'EUR':'symbol':'1.2-2' }}</small>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-label">Frais de Livraison</span>
+          <strong class="kpi-value">{{ st.kpis_globaux.total_frais_livraison | currency:'EUR':'symbol':'1.2-2' }}</strong>
+          <small>Forfait + indemnités km</small>
+        </article>
+      </div>
+
+      <!-- Graphiques comparatifs -->
+      <div class="charts-grid">
+        <!-- Graphique 1 : Performance par Menu ($unwind) -->
+        <section class="admin-card" aria-labelledby="chart-menus-title">
+          <h2 id="chart-menus-title">Performance Commerciale par Menu</h2>
+          @if (st.top_menus.length === 0) {
+            <p class="muted-sm">Aucune commande terminée sur cette période.</p>
+          } @else {
+            <div class="bar-chart">
+              @for (m of st.top_menus; track m.menu_id) {
+                <div class="bar-row">
+                  <div class="bar-meta">
+                    <strong>{{ m.titre }}</strong>
+                    <span>{{ m.portions_vendues }} convives • {{ m.ca_genere_brut | currency:'EUR':'symbol':'1.2-2' }}</span>
+                  </div>
+                  <div class="bar-track" role="progressbar" [attr.aria-valuenow]="m.ca_genere_brut" [attr.aria-valuemax]="maxMenuCa()">
+                    <div
+                      class="bar-fill bar-bordeaux"
+                      [style.width.%]="calculerPourcentage(m.ca_genere_brut, maxMenuCa())"
+                    ></div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Graphique 2 : Évolution mensuelle du CA -->
+        <section class="admin-card" aria-labelledby="chart-months-title">
+          <h2 id="chart-months-title">Évolution Mensuelle du Chiffre d'Affaires</h2>
+          @if (st.evolution_mensuelle.length === 0) {
+            <p class="muted-sm">Aucune donnée mensuelle disponible.</p>
+          } @else {
+            <div class="bar-chart">
+              @for (item of st.evolution_mensuelle; track item.annee + '-' + item.mois) {
+                <div class="bar-row">
+                  <div class="bar-meta">
+                    <strong>{{ formatMois(item.mois, item.annee) }}</strong>
+                    <span>{{ item.nombre_commandes }} cmd • {{ item.ca_ttc | currency:'EUR':'symbol':'1.2-2' }} TTC</span>
+                  </div>
+                  <div class="bar-track" role="progressbar" [attr.aria-valuenow]="item.ca_ttc" [attr.aria-valuemax]="maxMonthlyCa()">
+                    <div
+                      class="bar-fill bar-gold"
+                      [style.width.%]="calculerPourcentage(item.ca_ttc, maxMonthlyCa())"
+                    ></div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      </div>
+    }
+  }
+
+  <!-- ONGLET 2 : GESTION DES EMPLOYÉS -->
+  @if (ongletActif() === 'equipe') {
+    <div class="team-grid">
+      <!-- Liste des collaborateurs -->
+      <section class="admin-card" aria-labelledby="team-list-title">
+        <h2 id="team-list-title">Équipe Vite &amp; Gourmand ({{ employes().length }})</h2>
+        @if (chargementEmployes()) {
+          <p class="muted-sm">Chargement de l'équipe...</p>
+        } @else {
+          <div class="employees-list">
+            @for (emp of employes(); track emp.user_id) {
+              <div class="emp-item" [class.is-disabled]="emp.is_deleted">
+                <div>
+                  <strong>{{ emp.prenom }} {{ emp.nom }}</strong>
+                  <span class="role-badge">{{ emp.role }}</span>
+                  <p class="muted-sm">{{ emp.email }} @if (emp.telephone) { • {{ emp.telephone }} }</p>
+                </div>
+
+                @if (emp.is_deleted) {
+                  <span class="status-revoked">Accès révoqué</span>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn-danger-sm"
+                    [disabled]="actionEnCours()"
+                    (click)="desactiverEmploye(emp)"
+                  >
+                    Désactiver l'accès
+                  </button>
+                }
+              </div>
+            } @empty {
+              <p class="muted-sm">Aucun compte collaborateur enregistré.</p>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Formulaire de création d'un compte Employé -->
+      <section class="admin-card" aria-labelledby="team-create-title">
+        <h2 id="team-create-title">Créer un compte Employé</h2>
+        <p class="muted-sm">
+          Le rôle est automatiquement fixé à <strong>Employé</strong>. Par sécurité, le mot de passe initial doit être transmis séparément au collaborateur.
+        </p>
+
+        <form [formGroup]="employeeForm" (ngSubmit)="creerEmploye()" class="emp-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="emp-prenom">Prénom *</label>
+              <input id="emp-prenom" type="text" formControlName="prenom" />
+            </div>
+            <div class="form-group">
+              <label for="emp-nom">Nom *</label>
+              <input id="emp-nom" type="text" formControlName="nom" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="emp-email">Email professionnel *</label>
+            <input id="emp-email" type="email" formControlName="email" placeholder="prenom.nom@vite-gourmand.fr" />
+          </div>
+
+          <div class="form-group">
+            <label for="emp-tel">Téléphone</label>
+            <input id="emp-tel" type="tel" formControlName="telephone" />
+          </div>
+
+          <div class="form-group">
+            <label for="emp-pwd">Mot de passe provisoire *</label>
+            <input id="emp-pwd" type="password" formControlName="password" />
+            <small class="hint-text">10 caractères min., 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.</small>
+          </div>
+
+          <button type="submit" class="btn-primary" [disabled]="actionEnCours()">
+            Créer l'accès collaborateur
+          </button>
+        </form>
+      </section>
+    </div>
+  }
+
+    <!-- ONGLET 3 : GESTION DES RÉGIMES & THÈMES -->
+  @if (ongletActif() === 'referentiels') {
+    <div class="team-grid">
+      <!-- Colonne Régimes -->
+      <section class="admin-card" aria-labelledby="ref-regimes-title">
+        <h2 id="ref-regimes-title">Régimes Alimentaires ({{ regimes().length }})</h2>
+
+        <div class="ref-add-row">
+          <input #newRegime type="text" placeholder="Nouveau régime (ex : Sans arachide)" aria-label="Nouveau régime" />
+          <button type="button" class="btn-primary" (click)="ajouterRegime(newRegime.value); newRegime.value = ''">
+            Ajouter
+          </button>
+        </div>
+
+        <div class="employees-list">
+          @for (r of regimes(); track r.id) {
+            <div class="emp-item">
+              <input #editRegime type="text" [value]="r.libelle" [aria-label]="'Libellé régime ' + r.libelle" />
+              <button type="button" class="btn-outline-sm" (click)="modifierRegime(r.id, editRegime.value)">
+                Enregistrer
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- Colonne Thèmes -->
+      <section class="admin-card" aria-labelledby="ref-themes-title">
+        <h2 id="ref-themes-title">Thèmes Événementiels ({{ themes().length }})</h2>
+
+        <div class="ref-add-row">
+          <input #newTheme type="text" placeholder="Nouveau thème (ex : Séminaire VIP)" aria-label="Nouveau thème" />
+          <button type="button" class="btn-primary" (click)="ajouterTheme(newTheme.value); newTheme.value = ''">
+            Ajouter
+          </button>
+        </div>
+
+        <div class="employees-list">
+          @for (t of themes(); track t.id) {
+            <div class="emp-item">
+              <input #editTheme type="text" [value]="t.libelle" [aria-label]="'Libellé thème ' + t.libelle" />
+              <button type="button" class="btn-outline-sm" (click)="modifierTheme(t.id, editTheme.value)">
+                Enregistrer
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</section>

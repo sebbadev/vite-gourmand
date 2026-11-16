@@ -22,7 +22,8 @@ backend/.env
 secrets/
 
 # Backups, scripts et snapshots personnels
-admin/
+/admin/
+frontend/admin/
 *.log
 
 # OS et éditeurs
