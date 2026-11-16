@@ -16,6 +16,8 @@ import { CatalogueFilters, MenuListItem } from '../../core/models';
 export class CatalogueList implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly catalogueService = inject(CatalogueService);
+  readonly fallbackImage =
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500' viewBox='0 0 800 500'><rect width='800' height='500' fill='%236b2737'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23faf8f5' font-family='Georgia, serif' font-size='28'>Vite %26 Gourmand — Traiteur</text></svg>";
 
   menus = signal<MenuListItem[]>([]);
   referentiels = signal<CatalogueFilters>({ themes: [], regimes: [], allergenes: [] });
@@ -67,4 +69,12 @@ export class CatalogueList implements OnInit {
       sans_allergene_id: null
     });
   }
+
+    onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img.src !== this.fallbackImage) {
+      img.src = this.fallbackImage;
+    }
+  }
+  
 }

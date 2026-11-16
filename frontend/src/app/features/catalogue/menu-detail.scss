@@ -42,12 +42,20 @@
 .main-photo {
   border-radius: var(--radius-sm);
   overflow: hidden;
-  height: 320px;
+  aspect-ratio: 4 / 3;
+  max-height: 380px;
+  width: 100%;
+  background-color: #eae3da;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center center;
+    display: block;
   }
 }
 
@@ -72,7 +80,7 @@
   img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: fit;
   }
 
   &.is-active {
@@ -235,7 +243,7 @@
     width: 76px;
     height: 76px;
     border-radius: var(--radius-sm);
-    object-fit: cover;
+    object-fit: fit;
     flex-shrink: 0;
   }
 
