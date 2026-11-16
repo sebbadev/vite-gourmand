@@ -18,6 +18,7 @@ import {
   OrderStatusUpdate,
   Plat,
   PlatCreatePayload,
+  RefItem,
   User
 } from '../models';
 
@@ -125,5 +126,23 @@ export class BackofficeService {
       params = params.set('annee', annee.toString());
     }
     return this.http.get<AdminStatsResponse>(`${this.apiUrl}/admin/stats`, { params });
+  }
+
+  // --- 6. Référentiels : Régimes & Thèmes (Admin uniquement) ---
+
+  createRegime(libelle: string): Observable<RefItem> {
+    return this.http.post<RefItem>(`${this.apiUrl}/admin/referentiels/regimes`, { libelle });
+  }
+
+  updateRegime(regimeId: number, libelle: string): Observable<RefItem> {
+    return this.http.put<RefItem>(`${this.apiUrl}/admin/referentiels/regimes/${regimeId}`, { libelle });
+  }
+
+  createTheme(libelle: string): Observable<RefItem> {
+    return this.http.post<RefItem>(`${this.apiUrl}/admin/referentiels/themes`, { libelle });
+  }
+
+  updateTheme(themeId: number, libelle: string): Observable<RefItem> {
+    return this.http.put<RefItem>(`${this.apiUrl}/admin/referentiels/themes/${themeId}`, { libelle });
   }
 }

@@ -14,6 +14,7 @@ from app.routers.avis import router as avis_router
 from app.routers.admin_users import router as admin_users_router
 from app.routers.horaires import router as horaires_router
 from app.routers.contact import router as contact_router
+from app.routers.referentiels import router as referentiels_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -42,6 +43,7 @@ app.include_router(avis_router, prefix=settings.API_V1_STR)
 app.include_router(admin_users_router, prefix=settings.API_V1_STR)
 app.include_router(horaires_router, prefix=settings.API_V1_STR)
 app.include_router(contact_router, prefix=settings.API_V1_STR)
+app.include_router(referentiels_router, prefix=settings.API_V1_STR)
 
 @app.get("/", tags=["Health Check"])
 async def health_check(

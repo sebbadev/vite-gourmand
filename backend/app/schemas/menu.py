@@ -15,6 +15,9 @@ class RefItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class RefItemPayload(BaseModel):
+    """Payload de création ou modification d'un régime ou d'un thème."""
+    libelle: str = Field(..., min_length=2, max_length=50)    
 # --- Schémas Plats ---
 
 class PlatBase(BaseModel):
