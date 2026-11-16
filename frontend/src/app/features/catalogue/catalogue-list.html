@@ -77,6 +77,7 @@
               [src]="menu.images_url" 
               [alt]="'Illustration du menu ' + menu.titre" 
               loading="lazy"
+              (error)="onImageError($event)"
             />
             <span class="price-badge">{{ menu.prix_par_personne | currency:'EUR':'symbol':'1.2-2' }} / pers.</span>
           </div>
