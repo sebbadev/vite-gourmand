@@ -265,7 +265,10 @@ def list_all_orders_backoffice(
     stmt = (
         select(Commande)
         .where(Commande.is_deleted.is_(False))
-        .options(selectinload(Commande.details).selectinload(CommandeDetail.menu))
+        .options(
+            selectinload(Commande.client),
+            selectinload(Commande.details).selectinload(CommandeDetail.menu)
+        )
         .order_by(Commande.date_prestation.asc(), Commande.heure_livraison.asc())
     )
 
@@ -284,6 +287,7 @@ def list_all_orders_backoffice(
             commande_id=c.commande_id,
             numero_commande=c.numero_commande,
             user_id=c.user_id,
+            client=c.client,
             date_prestation=c.date_prestation,
             heure_livraison=c.heure_livraison,
             adresse_livraison=c.adresse_livraison,

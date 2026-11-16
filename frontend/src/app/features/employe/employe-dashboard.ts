@@ -11,6 +11,7 @@ import {
   CatalogueFilters,
   ContactMode,
   ContactRead,
+  DishType,
   EquipmentStatus,
   Horaire,
   MenuListItem,
@@ -102,6 +103,113 @@ export class EmployeDashboard implements OnInit {
     images_url: ['/assets/images/menus/prestige.webp', [Validators.required, Validators.maxLength(255)]],
     description: ['', [Validators.required, Validators.minLength(10)]]
   });
+
+  // --- Gestion des Plats (Création & Édition) ---
+  readonly dishTypes: DishType[] = ['Entrée', 'Plat principal', 'Accompagnement', 'Dessert'];
+  filtreCategoriePlat = signal<string>('');
+  filtreRecherchePlat = signal<string>('');
+
+  platsFiltres = computed(() => {
+    const cat = this.filtreCategoriePlat();
+    const recherche = this.filtreRecherchePlat().trim().toLowerCase();
+
+    return this.plats().filter((p) => {
+      if (cat && p.type_de_plat !== cat) return false;
+      if (recherche && !p.titre.toLowerCase().includes(recherche)) return false;
+      return true;
+    });
+  });
+  
+  platEnEditionId = signal<number | null>(null);
+  selectedPlatAllergeneIds = signal<number[]>([]);
+  selectedPlatRegimeIds = signal<number[]>([]);
+  selectedPlatThemeIds = signal<number[]>([]);
+
+  platForm = this.fb.nonNullable.group({
+    titre: ['', [Validators.required, Validators.maxLength(50)]],
+    type_de_plat: ['Entrée' as DishType, [Validators.required]],
+    images_url: ['/assets/images/plats/carpaccio-st-jacques.webp', [Validators.maxLength(255)]]
+  });
+
+  editerPlat(plat: Plat): void {
+    this.platEnEditionId.set(plat.plat_id);
+    this.platForm.patchValue({
+      titre: plat.titre,
+      type_de_plat: plat.type_de_plat,
+      images_url: plat.images_url ?? ''
+    });
+    this.selectedPlatAllergeneIds.set(plat.allergenes.map((a) => a.id));
+    this.selectedPlatRegimeIds.set(plat.regimes.map((r) => r.id));
+    this.selectedPlatThemeIds.set(plat.themes.map((t) => t.id));
+  }
+
+  annulerEditionPlat(): void {
+    this.platEnEditionId.set(null);
+    this.platForm.reset({
+      titre: '',
+      type_de_plat: 'Entrée',
+      images_url: '/assets/images/plats/carpaccio-st-jacques.webp'
+    });
+    this.selectedPlatAllergeneIds.set([]);
+    this.selectedPlatRegimeIds.set([]);
+    this.selectedPlatThemeIds.set([]);
+  }
+
+  sauvegarderPlat(): void {
+    if (this.platForm.invalid) {
+      this.platForm.markAllAsTouched();
+      return;
+    }
+
+    this.resetMessages();
+    this.actionEnCours.set(true);
+
+    const raw = this.platForm.getRawValue();
+    const payload = {
+      titre: raw.titre.trim(),
+      type_de_plat: raw.type_de_plat,
+      images_url: raw.images_url.trim() || null,
+      allergene_ids: this.selectedPlatAllergeneIds(),
+      regime_ids: this.selectedPlatRegimeIds(),
+      theme_ids: this.selectedPlatThemeIds()
+    };
+
+    const editId = this.platEnEditionId();
+    const requete$ = editId
+      ? this.backofficeService.updatePlat(editId, payload)
+      : this.backofficeService.createPlat(payload);
+
+    requete$.subscribe({
+      next: (saved) => {
+        this.actionEnCours.set(false);
+        this.messageSucces.set(
+          editId
+            ? `Le plat « ${saved.titre} » a été mis à jour.`
+            : `Le plat « ${saved.titre} » a été ajouté au catalogue.`
+        );
+        this.annulerEditionPlat();
+        this.chargerCatalogue();
+      },
+      error: (err) => {
+        this.actionEnCours.set(false);
+        this.messageErreur.set(err?.error?.detail || 'Erreur lors de l’enregistrement du plat.');
+      }
+    });
+  }
+
+  supprimerPlat(plat: Plat): void {
+    this.resetMessages();
+    this.backofficeService.deletePlat(plat.plat_id).subscribe({
+      next: () => {
+        this.messageSucces.set(`Le plat « ${plat.titre} » a été supprimé.`);
+        if (this.platEnEditionId() === plat.plat_id) {
+          this.annulerEditionPlat();
+        }
+        this.chargerCatalogue();
+      },
+      error: (err) => this.messageErreur.set(err?.error?.detail || 'Impossible de supprimer ce plat (peut-être lié à un menu).')
+    });
+  }
 
   // Panneau d'annulation employé (avec audit de contact obligatoire)
   commandeAnnulationId = signal<number | null>(null);

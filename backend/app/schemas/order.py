@@ -61,11 +61,23 @@ class OrderCreate(BaseModel):
     items: List[OrderItemCreate] = Field(..., min_length=1, description="Liste des menus commandés")
 
 
+class OrderClientSummary(BaseModel):
+    """Informations de contact du client associées à une commande."""
+    user_id: int
+    prenom: str
+    nom: str
+    email: str
+    telephone: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class OrderRead(BaseModel):
     """Vue détaillée d'une commande pour le suivi client et l'espace employé."""
     commande_id: int
     numero_commande: str
     user_id: int
+    client: Optional[OrderClientSummary] = None
     date_prestation: date
     heure_livraison: time
     adresse_livraison: Optional[str] = None
