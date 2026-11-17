@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.vite-et-gourmand.fr/api/v1'
+  apiUrl: 'https://api-vg.sebastienbadel.com/api/v1'
 };
