@@ -146,6 +146,30 @@ def seed_database():
         default_pwd = "Password123!"
         users_data = [
             {
+                "email": "jose@vite-gourmand.fr",
+                "password": default_pwd,
+                "prenom": "José",
+                "nom": "Fondateur",
+                "telephone": "0600000001",
+                "adresse": "14 Rue de la Paix",
+                "code_postal": "75002",
+                "ville": "Paris",
+                "pays": "France",
+                "role": UserRole.ADMIN,
+            },
+            {
+                "email": "julie@vite-gourmand.fr",
+                "password": default_pwd,
+                "prenom": "Julie",
+                "nom": "Fondateur",
+                "telephone": "0600000002",
+                "adresse": "14 Rue de la Paix",
+                "code_postal": "75002",
+                "ville": "Paris",
+                "pays": "France",
+                "role": UserRole.ADMIN,
+            },
+            {
                 "email": "admin@vite-gourmand.fr",
                 "password": default_pwd,
                 "prenom": "Sophie",
@@ -160,7 +184,7 @@ def seed_database():
             {
                 "email": "employe@vite-gourmand.fr",
                 "password": default_pwd,
-                "prenom": "José",
+                "prenom": "Henry",
                 "nom": "Collaborateur",
                 "telephone": "0611223344",
                 "adresse": "22 Avenue Foch",

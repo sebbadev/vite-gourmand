@@ -44,12 +44,14 @@ INSERT INTO public.horaires (jour, heure_ouverture, heure_fermeture) VALUES
 ('Samedi', '07:30:00', '23:00:00'),
 ('Dimanche', '08:00:00', '16:00:00');
 
--- 5. Utilisateurs (Comptes de test pour chaque rôle)
+-- 5. Utilisateurs (Comptes de test pour chaque rôle - mot de passe par défault : Password123!)
 INSERT INTO public.utilisateurs (user_id, email, password_hash, prenom, nom, telephone, adresse, code_postal, ville, pays, role) VALUES
-(1, 'admin@vite-gourmand.fr', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'Sophie', 'Directrice', '0601020304', '14 Rue de la Paix', '75002', 'Paris', 'France', 'Administrateur'),
-(2, 'employe@vite-gourmand.fr', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'José', 'Collaborateur', '0611223344', '22 Avenue Foch', '75016', 'Paris', 'France', 'Employé'),
-(3, 'client.durand@example.com', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'Marc', 'Durand', '0655443322', '5 Boulevard Victor Hugo', '92200', 'Neuilly-sur-Seine', 'France', 'Client'),
-(4, 'client.leroy@example.com', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'Claire', 'Leroy', '0677889900', '18 Rue des Lilas', '94300', 'Vincennes', 'France', 'Client');
+(1, 'jose@vite-gourmand.fr', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'José', 'Fondateur', '0600000001', '14 Rue de la Paix', '75002', 'Paris', 'France', 'Administrateur'),
+(2, 'julie@vite-gourmand.fr', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'Julie', 'Fondateur', '0600000002', '14 Rue de la Paix', '75002', 'Paris', 'France', 'Administrateur'),
+(3, 'admin@vite-gourmand.fr', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'Sophie', 'Directrice', '0601020304', '14 Rue de la Paix', '75002', 'Paris', 'France', 'Administrateur'),
+(4, 'employe@vite-gourmand.fr', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'Henry', 'Collaborateur', '0611223344', '22 Avenue Foch', '75016', 'Paris', 'France', 'Employé'),
+(5, 'client.durand@example.com', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'Marc', 'Durand', '0655443322', '5 Boulevard Victor Hugo', '92200', 'Neuilly-sur-Seine', 'France', 'Client'),
+(6, 'client.leroy@example.com', '$2b$12$L73.bKkIeW8n4tZ22vK/z.v5sVfK0n2E2x2P.H2G6iP8fD1W4k7Xe', 'Claire', 'Leroy', '0677889900', '18 Rue des Lilas', '94300', 'Vincennes', 'France', 'Client');
 
 -- 6. Plats élémentaires
 INSERT INTO public.plats (plat_id, titre, type_de_plat, images_url) VALUES
@@ -122,9 +124,9 @@ INSERT INTO public.menus_themes (menu_id, theme_id) VALUES
 
 -- 13. Commandes de démonstration
 INSERT INTO public.commandes (commande_id, numero_commande, user_id, date_prestation, heure_livraison, prix_total, remise_appliquee, adresse_livraison, distance_km, frais_livraison, statut, date_commande, statut_paiement, statut_materiel, contact_client_effectue) VALUES
-(1, 'CMD-2026-0001', 3, '2026-10-15', '12:30:00', 960.00, 0.0, '5 Boulevard Victor Hugo, 92200 Neuilly-sur-Seine', 8.5, 12.50, 'Terminée', '2026-10-01 09:15:00+02', 'Réglée', 'Retourné', false),
-(2, 'CMD-2026-0002', 4, '2026-11-20', '19:30:00', 1170.00, 130.00, '18 Rue des Lilas, 94300 Vincennes', 14.0, 18.00, 'Acceptée', '2026-11-02 14:20:00+01', 'En attente de règlement', 'Inclus', false),
-(3, 'CMD-2026-0003', 3, '2026-11-05', '11:30:00', 260.00, 0.0, '5 Boulevard Victor Hugo, 92200 Neuilly-sur-Seine', 8.5, 12.50, 'Annulée', '2026-10-28 16:45:00+01', 'Annulée', 'Non inclus', true);
+(1, 'CMD-2026-0001', 5, '2026-10-15', '12:30:00', 960.00, 0.0, '5 Boulevard Victor Hugo, 92200 Neuilly-sur-Seine', 8.5, 12.50, 'Terminée', '2026-10-01 09:15:00+02', 'Réglée', 'Retourné', false),
+(2, 'CMD-2026-0002', 6, '2026-11-20', '19:30:00', 1170.00, 130.00, '18 Rue des Lilas, 94300 Vincennes', 14.0, 18.00, 'Acceptée', '2026-11-02 14:20:00+01', 'En attente de règlement', 'Inclus', false),
+(3, 'CMD-2026-0003', 5, '2026-11-05', '11:30:00', 260.00, 0.0, '5 Boulevard Victor Hugo, 92200 Neuilly-sur-Seine', 8.5, 12.50, 'Annulée', '2026-10-28 16:45:00+01', 'Annulée', 'Non inclus', true);
 
 UPDATE public.commandes 
 SET motif_annulation = 'Impossibilité technique suite à panne de chambre froide.', 
@@ -138,7 +140,7 @@ INSERT INTO public.commande_details (detail_id, commande_id, menu_id, quantite, 
 
 -- 14. Avis clients
 INSERT INTO public.avis (avis_id, description, user_id, menu_id, statut, qualite, service, prix) VALUES
-(1, 'Prestation irréprochable. Le bœuf aux morilles a fait l''unanimité auprès de nos convives.', 3, 1, 'Approuvé', 'Excellent', 'Excellent', 'Bien');
+(1, 'Prestation irréprochable. Le bœuf aux morilles a fait l''unanimité auprès de nos convives.', 5, 1, 'Approuvé', 'Excellent', 'Excellent', 'Bien');
 
 -- 15. Réalignement des séquences d'identifiants (Auto-increment)
 SELECT setval('public.utilisateurs_user_id_seq', (SELECT MAX(user_id) FROM public.utilisateurs));
