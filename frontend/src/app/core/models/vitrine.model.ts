@@ -9,17 +9,18 @@ export interface AvisNotes {
   qualite: number;
   service: number;
   prix: number;
-  moyenne: number;
 }
 
 export interface Avis {
   id: string;
-  user_id: number;
   commande_id: number;
-  client_nom?: string;
+  numero_commande?: string | null;
+  user_id: number;
+  auteur_prenom?: string | null;
   notes: AvisNotes;
+  note_moyenne: number;
   description: string;
-  statut: 'En attente' | 'Approuvé' | 'Rejeté';
+  statut: 'En attente' | 'Approuvé' | 'Répondu' | 'Rejeté';
   created_at: string;
 }
 

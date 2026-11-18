@@ -54,9 +54,9 @@
         @for (avis of avisList(); track avis.id) {
           <article class="card review-card">
             <div class="review-header">
-              <span class="review-author">{{ avis.client_nom || 'Client vérifié' }}</span>
+              <span class="review-author">{{ avis.auteur_prenom || 'Client vérifié' }}</span>
               <span class="review-score" aria-label="Note moyenne">
-                ★ {{ avis.notes.moyenne | number:'1.1-1' }}/5
+                ★ {{ avis.note_moyenne | number:'1.1-1' }}/5
               </span>
             </div>
             <p class="review-text">« {{ avis.description }} »</p>
