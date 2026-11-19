@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { Home } from './features/home/home';
 import { Contact } from './features/contact/contact';
+import { Legal } from './features/legal/legal';
 import { Login } from './features/auth/login';
 import { Register } from './features/auth/register';
 import { ResetPassword } from './features/auth/reset-password';
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'catalogue/:id', component: MenuDetailPage, title: 'Détail du Menu — Vite & Gourmand' },
   { path: 'panier', component: PanierPage, title: 'Panier & Devis — Vite & Gourmand' },
   { path: 'contact', component: Contact, title: 'Contact — Vite & Gourmand' },
+  { path: 'mentions-legales', component: Legal, title: 'Mentions Légales & CGV — Vite & Gourmand' },
   { path: 'connexion', component: Login, title: 'Connexion — Vite & Gourmand' },
   { path: 'inscription', component: Register, title: 'Inscription — Vite & Gourmand' },
   { path: 'mot-de-passe-oublie', component: ResetPassword, title: 'Réinitialisation — Vite & Gourmand' },
