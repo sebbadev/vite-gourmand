@@ -16,11 +16,9 @@ L'application adopte une architecture logicielle **trois tiers découplée**, ga
   Angular 18+                   FastAPI (Python)                PostgreSQL (OLTP)
 (Standalone Components) <====> (Async / Pydantic) <===========>   & MongoDB (OLAP / Doc)
   [Front-end]                  [Core Backend]                  [Databases]
-
 ```
 
 ---
-
 
 ## 2. Matrice Justificative des Choix Technologiques
 
@@ -55,13 +53,12 @@ Le choix d'une architecture de données hybride répond à une séparation fonct
        │ • Suivi du matériel    │       │   (Reporting décision) │
        │ • Factures & Règlements│       │                        │
        └────────────────────────┘       └────────────────────────┘
-
 ```
 
 1. **Isolation des charges (OLTP vs OLAP) :**
-Les calculs statistiques de l'administrateur (chiffre d'affaires consolidé, analyse des ventes par trimestre) sollicitent d'importants volumes de données. En déportant ces calculs vers la collection dénormalisée `commandes_stats` dans MongoDB, on garantit que les clients qui passent commande sur PostgreSQL ne subissent aucun ralentissement ou verrou de table (*table locking*).
+   Les calculs statistiques de l'administrateur (chiffre d'affaires consolidé, analyse des ventes par période) sollicitent d'importants volumes de données. En déportant ces calculs vers la collection dénormalisée `commandes_stats` dans MongoDB, on garantit que les clients qui passent commande sur PostgreSQL ne subissent aucun ralentissement ou verrou de table (*table locking*).
 2. **Cycle de vie des avis et messages :**
-Les retours d'expérience et les demandes de contact ont une structure semi-structurée susceptible d'évoluer (ajout d'une note spécifique, pièces jointes ultérieures). MongoDB absorbe ces évolutions sans nécessiter d'altération de schéma SQL (*ALTER TABLE*).
+   Les retours d'expérience et les demandes de contact ont une structure semi-structurée susceptible d'évoluer (ajout d'une note spécifique, pièces jointes ultérieures). MongoDB absorbe ces évolutions sans nécessiter d'altération de schéma SQL (*ALTER TABLE*).
 
 ---
 
@@ -71,13 +68,11 @@ Conformément aux exigences du client et du standard OWASP Top 10 :
 
 * **Prévention des Injections SQL :** Aucune concaténation de requêtes en chaîne brute. Toutes les interactions SQL s'opèrent via l'ORM SQLAlchemy avec requêtes paramétrées et typage fort Pydantic.
 * **Sécurisation des Mots de Passe :** Exigence d'au moins 10 caractères (avec minuscules, majuscules, chiffres et caractères spéciaux). Hachage via `bcrypt` avec sel cryptographique aléatoire. Aucun mot de passe n'est jamais consigné en clair dans les logs ou les emails transactionnels.
-* **Protection Cross-Origin (CORS - *Cross-Origin Resource Sharing*) :** Configuration explicite du middleware FastAPI pour restreindre les origines autorisées au domaine du client Angular (`http://localhost:4200` en local, URL Vercel/Render en production).
+* **Protection Cross-Origin (CORS - *Cross-Origin Resource Sharing*) :** Configuration explicite du middleware FastAPI pour restreindre les origines autorisées au domaine du client Angular (`http://localhost:4200` en local, `[https://vite-gourmand.sebastienbadel.com](https://vite-gourmand.sebastienbadel.com)` en production).
 * **Conformité RGPD :**
-* Suppression logique (*Soft Delete*) via le champ `is_deleted` pour permettre l'inactivation d'un compte ou d'un employé tout en préservant l'historique comptable obligatoire.
-* Formulaire de contact et d'inscription avec case à cocher explicite de consentement au traitement des données personnelles.
-* Émission de factures PDF infalsifiables et horodatées.
-
-
+  * Suppression logique (*Soft Delete*) via le champ `is_deleted` pour permettre l'inactivation d'un compte ou d'un employé tout en préservant l'historique comptable obligatoire.
+  * Formulaire de contact et d'inscription avec case à cocher explicite de consentement au traitement des données personnelles.
+  * Émission de factures PDF infalsifiables et horodatées.
 
 ---
 
@@ -86,43 +81,67 @@ Conformément aux exigences du client et du standard OWASP Top 10 :
 Le projet adopte une organisation en monorepo clair et découplé :
 
 ```text
-@Vite_Gourmand/
+vite-gourmand/
 │
-├── README.md                           # Présentation du projet, badges et quickstart
-├── .gitignore                          # Exclusions strictes (venv, node_modules, .env, admin)
+├── README.md                                      # Présentation du projet, liens officiels et installation locale
+├── .gitignore                                     # Exclusions strictes (venv, node_modules, .env, sebbadev/)
+├── Vite_Gourmand.sublime-project                  # Espace de travail Sublime Text
 │
-├── admin/                              # Espace administration et utilitaires (ignoré par Git)
+├── sebbadev/                                      # Utilitaires personnels et snapshots locaux (ignoré par Git)
 │
-├── docs/                               # Référentiel documentaire (Source of Truth)
-│   ├── architecture.md                 # Ce document (P1-04)
-│   ├── backlog.md                      # Carnet de bord des phases P0 à P7
-│   ├── conventions.md                  # Règles de commits et de branches Git
-│   ├── modele-donnees.md               # Schéma relationnel, MCD, ENUMs et NoSQL (P1-01, P1-02)
-│   ├── api-endpoints.md                # Matrice des routes d'API et contrats REST (P1-03)
-│   ├── tracabilite-exigences.md        # Matrice P0-05 (Exigence ➔ RG ➔ Solution technique)
-│   ├── diagrammes/                     # Diagrammes Mermaid, exports SVG et PNG
-│   │   └── sequences/                  # Diagrammes de séquence des 4 acteurs (P0-04)
-│   └── specs/                          # Spécifications détaillées par acteur
+├── docs/                                          # Référentiel documentaire (Source of Truth)
+│   ├── api-endpoints.md                           # Matrice des routes d'API et contrats REST (P1-03)
+│   ├── architecture.md                            # Ce document (P1-04)
+│   ├── backlog.md                                 # Carnet de bord des phases P0 à P7
+│   ├── cahier de charges - liste.md               # Analyse détaillée des exigences fonctionnelles
+│   ├── cahier des charges-fonctionnel et technique.md # Cahier des charges consolidé
+│   ├── changelog.md                               # Journal des évolutions techniques
+│   ├── cheatsheet.md                              # Mémo commandes développeur
+│   ├── modele-donnees.md                          # Schéma relationnel, MCD, ENUMs et NoSQL (P1-01, P1-02)
+│   ├── reference.md                               # Références documentaires, liens officiels et Workflowy
+│   ├── tracabilite-exigences.md                   # Matrice P0-05 (Exigence ➔ RG ➔ Solution technique)
+│   ├── Dossier-Synthese-Vite-et-Gourmand.pdf      # Dossier de synthèse complet pour le jury
+│   ├── INSTALLATION.md                            # Guide_d'installation locale vite_gourmand
+│   ├── Manuel-Utilisation-Vite-et-Gourmand.pdf    # Manuel d'utilisation client et back-office
+│   ├── design/                                    # Charte graphique, UI Kit, wireframes et mockups (SVG)
+│   ├── diagrammes/                                # Diagrammes UML (Classes, MCD), exports SVG et PNG
+│   │   └── sequences/                             # Diagrammes de séquence des 4 acteurs (P0-04)
+│   └── specs/                                     # Spécifications détaillées par acteur
+│       ├── parcours_administrateur.md
+│       ├── parcours_client.md
+│       ├── parcours_employe.md
+│       └── parcours_visiteur.md
 │
-├── backend/                            # API REST & Logique Métier (FastAPI / Python)
-│   ├── database/                       # Scripts SQL et données de seed
-│   │   ├── create_db.sql               # Schéma DDL relationnel PostgreSQL (P1-01)
-│   │   ├── fixtures.sql                # Jeu d'essai SQL relationnel (P1-01)
-│   │   └── mongo_fixtures.json         # Jeu d'essai NoSQL MongoDB (P1-02)
-│   └── app/                            # Code source applicatif
-│       ├── models/                     # Entités relationnelles SQLAlchemy
-│       ├── core/                       # Configuration, sécurité bcrypt, JWT et RBAC (P3)
-│       ├── schemas/                    # DTOs Pydantic de validation (P3)
-│       ├── services/                   # Moteur des règles de gestion tarification/commandes (P3)
-│       └── routers/                    # Contrôleurs API REST v1 (P3)
+├── backend/                                       # API REST & Logique Métier (FastAPI / Python 3.12)
+│   ├── alembic/                                   # Migrations de schéma SQLAlchemy
+│   ├── alembic.ini                                # Configuration Alembic
+│   ├── Procfile                                   # Commande de démarrage Railway
+│   ├── .env.example                               # Modèle des variables d'environnement
+│   ├── requirements.txt                           # Dépendances Python
+│   ├── seed.py                                    # Script d'initialisation automatisée SQL + MongoDB
+│   ├── database/                                  # Scripts SQL et données de seed
+│   │   ├── create_db.sql                          # Schéma DDL relationnel PostgreSQL (P1-01)
+│   │   ├── fixtures.sql                           # Jeu d'essai SQL relationnel (P1-01)
+│   │   └── mongo_fixtures.json                    # Jeu d'essai NoSQL MongoDB (P1-02)
+│   ├── tests/                                     # Suite de tests unitaires et permissions (Pytest)
+│   └── app/                                       # Code source applicatif
+│       ├── main.py                                # Point d'entrée FastAPI & Health Check
+│       ├── core/                                  # Configuration, sécurité bcrypt, JWT et RBAC (P3)
+│       ├── models/                                # Entités relationnelles SQLAlchemy
+│       ├── schemas/                               # DTOs Pydantic de validation (P3)
+│       ├── services/                              # Moteur des règles de gestion tarification/matériel (P3)
+│       └── routers/                               # Contrôleurs API REST v1 (P3)
 │
-└── frontend/                           # Application Web SPA (Angular 18+ Standalone) (P4)
+└── frontend/                                      # Application Web SPA (Angular 18+ Standalone) (P4)
+    ├── public/assets/images/                      # Visuels menus et plats optimisés (WebP)
     ├── src/
     │   ├── app/
-    │   │   ├── core/                   # Guards, Intercepteurs HTTP, Services d'authentification
-    │   │   ├── features/               # Modules fonctionnels (Catalogue, Panier, Dashboards)
-    │   │   └── shared/                 # Composants réutilisables, pipes et modèles
-    │   └── styles.scss                 # Charte graphique et tokens SCSS
+    │   │   ├── core/                              # Guards, Intercepteurs HTTP, Services d'authentification
+    │   │   ├── features/                          # Modules fonctionnels (Catalogue, Panier, Dashboards)
+    │   │   └── shared/                            # Composants réutilisables (Header, Footer, Cartes)
+    │   ├── environments/                          # Variables d'environnement dev / prod
+    │   └── styles.scss                            # Charte graphique et tokens SCSS
+    ├── proxy.conf.json                            # Proxy API local
+    ├── vercel.json                                # Configuration du routage SPA sur Vercel
     └── package.json
-
 ```

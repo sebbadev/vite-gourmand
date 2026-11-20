@@ -22,8 +22,8 @@ backend/.env
 secrets/
 
 # Backups, scripts et snapshots personnels
-/admin/
-frontend/admin/
+sebbadev/
+
 *.log
 
 # OS et éditeurs
