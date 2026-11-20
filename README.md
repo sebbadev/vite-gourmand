@@ -18,7 +18,7 @@ Solution web fullstack de réservation de menus traiteur événementiel, de simu
 | **API REST (Backend)** | Railway (ASGI) | [https://api-vg.sebastienbadel.com](https://api-vg.sebastienbadel.com) |
 | **Documentation Interactive Swagger** | OpenAPI 3.1 | [https://api-vg.sebastienbadel.com/docs](https://api-vg.sebastienbadel.com/docs) |
 | **Dépôt GitHub** | Branches `main` & `dev` | [https://github.com/sebbadev/vite-gourmand.git](https://github.com/sebbadev/vite-gourmand.git) |
-| **Maquettes & Design System** | Figma | [Voir le prototype Figma](https://www.figma.com/design/Qp6yvBmAQuXyhS004Qgyzi/ECF-Vite-Gourmand?node-id=14-1136&t=xwdcsW3Qnn50xaol-1) |
+| **Maquettes & Design System** | Figma & Git | [Voir le prototype Figma](https://www.figma.com/design/Qp6yvBmAQuXyhS004Qgyzi/ECF-Vite-Gourmand?node-id=14-1136&t=xwdcsW3Qnn50xaol-1) · `docs/design/` |
 | **Suivi Agile & Backlog** | Workflowy & Git | [Tableau Workflowy](https://workflowy.com/s/vite-gourmand-ecf/hJdChJKacyv8pEzD) · `docs/backlog.md` |
 
 ---
