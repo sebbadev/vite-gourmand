@@ -101,6 +101,7 @@ vite-gourmand/
 │   ├── reference.md                               # Références documentaires, liens officiels et Workflowy
 │   ├── tracabilite-exigences.md                   # Matrice P0-05 (Exigence ➔ RG ➔ Solution technique)
 │   ├── Dossier-Synthese-Vite-et-Gourmand.pdf      # Dossier de synthèse complet pour le jury
+│   ├── INSTALLATION.md                            # Guide_d'installation locale vite_gourmand
 │   ├── Manuel-Utilisation-Vite-et-Gourmand.pdf    # Manuel d'utilisation client et back-office
 │   ├── design/                                    # Charte graphique, UI Kit, wireframes et mockups (SVG)
 │   ├── diagrammes/                                # Diagrammes UML (Classes, MCD), exports SVG et PNG

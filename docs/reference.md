@@ -24,6 +24,7 @@ L'ensemble de la documentation technique et fonctionnelle est versionné dans le
 
 * **Présentation & Installation Locale :**
   * `README.md` (à la racine du dépôt) : Présentation du projet, stack technique, procédure complète d'installation locale (PostgreSQL, MongoDB, FastAPI, Angular) et comptes de démonstration.
+  * `docs/INSTALLATION.md` : Guide détaillé d'installation locale (PostgreSQL, MongoDB, FastAPI, Angular) et dépannage.
   * `backend/.env.example` : Modèle des variables d'environnement requises pour l'API.
 * **Livrables PDF de Certification :**
   * `docs/Dossier-Synthese-Vite-et-Gourmand.pdf` : Dossier complet d'architecture, sécurité, recette E2E et bilan projet.

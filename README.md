@@ -93,6 +93,7 @@ vite-gourmand/
     ├── reference.md                               # Références documentaires, liens officiels & Workflowy
     ├── tracabilite-exigences.md                   # Matrice de traçabilité (Exigences -> RG -> Code)
     ├── Dossier-Synthese-Vite-et-Gourmand.pdf      # Dossier de synthèse complet pour le jury ECF
+    ├── INSTALLATION.md                            # Guide_d'installation locale vite_gourmand
     ├── Manuel-Utilisation-Vite-et-Gourmand.pdf    # Guide utilisateur par profil avec comptes de test
     ├── design/                                    # Charte graphique, UI Kit, wireframes et mockups (SVG)
     ├── diagrammes/                                # Diagrammes UML (Classes, MCD, Séquences PNG/SVG)
