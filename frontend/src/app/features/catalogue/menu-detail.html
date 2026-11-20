@@ -1,0 +1,142 @@
+<section class="container detail-wrapper">
+  <a routerLink="/catalogue" class="back-link">&larr; Retour à tous les menus</a>
+
+  @if (chargement()) {
+    <p class="status-text">Chargement de la fiche du menu...</p>
+  } @else if (erreurMessage()) {
+    <div class="alert-danger" role="alert">{{ erreurMessage() }}</div>
+  } @else if (menu(); as m) {
+    <article class="detail-card">
+      <div class="detail-hero">
+        <!-- Colonne gauche : Galerie photographique interactive -->
+        <div class="gallery-col">
+          <div class="main-photo">
+            <img
+              [src]="selectedPhotoUrl() || m.images_url"
+              [alt]="'Photographie de ' + m.titre"
+              (error)="onImageError($event)"
+            />
+          </div>
+
+          @if (galeriePhotos().length > 1) {
+            <div class="thumbnails-row" role="group" aria-label="Galerie photos du menu et des plats">
+              @for (photo of galeriePhotos(); track photo.url) {
+                <button
+                  type="button"
+                  class="thumb-btn"
+                  [class.is-active]="(selectedPhotoUrl() || m.images_url) === photo.url"
+                  [title]="photo.label"
+                  (click)="choisirPhoto(photo.url)"
+                >
+                  <img [src]="photo.url" [alt]="photo.label" (error)="onImageError($event)" />
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Colonne droite : Informations, conditions & commande -->
+        <div class="detail-summary">
+          <div class="badges-row">
+            @for (theme of m.themes; track theme.id) {
+              <span class="badge badge-theme">{{ theme.libelle }}</span>
+            }
+            @for (regime of m.regimes; track regime.id) {
+              <span class="badge badge-regime">{{ regime.libelle }}</span>
+            }
+          </div>
+
+          <h1>{{ m.titre }}</h1>
+          <p class="description">{{ m.description }}</p>
+
+          <div class="conditions-box">
+            <div class="condition-item">
+              <span class="label">Tarif unitaire</span>
+              <strong class="value">{{ m.prix_par_personne | currency:'EUR':'symbol':'1.2-2' }} / pers.</strong>
+            </div>
+            <div class="condition-item">
+              <span class="label">Minimum requis</span>
+              <strong class="value">{{ m.nombre_personnes_min }} personnes</strong>
+            </div>
+            <div class="condition-item">
+              <span class="label">Disponibilité</span>
+              <strong class="value">{{ m.quantite_disponible }} prestations</strong>
+            </div>
+          </div>
+
+          <div class="allergens-box" aria-label="Informations allergènes">
+            <strong>Allergènes présents :</strong>
+            @if (m.allergenes.length > 0) {
+              <span>
+                @for (all of m.allergenes; track all.id; let last = $last) {
+                  {{ all.libelle }}{{ last ? '' : ', ' }}
+                }
+              </span>
+            } @else {
+              <span class="no-allergen">Aucun allergène majeur déclaré</span>
+            }
+          </div>
+
+          <div class="order-box">
+            <div class="qty-control">
+              <label for="nbConvives">Nombre de convives (min. {{ m.nombre_personnes_min }}) :</label>
+              <input
+                id="nbConvives"
+                type="number"
+                [min]="m.nombre_personnes_min"
+                [ngModel]="nbConvives()"
+                (ngModelChange)="nbConvives.set($event)"
+              />
+            </div>
+
+            @if (nbConvives() >= m.nombre_personnes_min + 5) {
+              <p class="promo-hint">
+                Remise volume de <strong>10 %</strong> applicable sur ce menu !
+              </p>
+            }
+
+            <button
+              type="button"
+              class="btn-order"
+              [disabled]="m.quantite_disponible <= 0 || nbConvives() < m.nombre_personnes_min"
+              (click)="commanderMenu()"
+            >
+              {{ m.quantite_disponible > 0 ? 'Commander ce menu' : 'Menu temporairement épuisé' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composition détaillée avec photo de chaque plat -->
+      <div class="dishes-section">
+        <h2>Composition du menu ({{ m.plats.length }} plats)</h2>
+        <div class="dishes-grid">
+          @for (plat of m.plats; track plat.plat_id) {
+            <div class="dish-item">
+              @if (plat.images_url) {
+                <img
+                  [src]="plat.images_url"
+                  [alt]="plat.titre"
+                  class="dish-thumb"
+                  (error)="onImageError($event)"
+                />
+              }
+              <div class="dish-info">
+                <span class="dish-type">{{ plat.type_de_plat }}</span>
+                <h3>{{ plat.titre }}</h3>
+                @if (plat.allergenes.length > 0) {
+                  <small class="dish-allergens">
+                    Allergènes :
+                    @for (a of plat.allergenes; track a.id; let last = $last) {
+                      {{ a.libelle }}{{ last ? '' : ', ' }}
+                    }
+                  </small>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </article>
+  }
+</section>

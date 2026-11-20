@@ -1,0 +1,494 @@
+<section class="container bo-wrapper" aria-labelledby="employe-title">
+  <header class="bo-header">
+    <div>
+      <h1 id="employe-title">Espace Gestion Traiteur (Back-Office)</h1>
+      <p>Pilotage quotidien des commandes, du catalogue, des avis clients et des horaires.</p>
+    </div>
+
+    <nav class="tabs-nav" aria-label="Modules de gestion opérationnelle">
+      <button type="button" class="tab-btn" [class.is-active]="ongletActif() === 'commandes'" (click)="ongletActif.set('commandes')">
+        Commandes ({{ commandes().length }})
+      </button>
+      <button type="button" class="tab-btn" [class.is-active]="ongletActif() === 'catalogue'" (click)="ongletActif.set('catalogue')">
+        Menus &amp; Plats ({{ menus().length }})
+      </button>
+      <button type="button" class="tab-btn" [class.is-active]="ongletActif() === 'avis'" (click)="ongletActif.set('avis')">
+        Modération Avis ({{ avisList().length }})
+      </button>
+      <button type="button" class="tab-btn" [class.is-active]="ongletActif() === 'horaires'" (click)="ongletActif.set('horaires')">
+        Horaires &amp; Messages
+      </button>
+    </nav>
+  </header>
+
+  @if (messageSucces()) {
+    <div class="alert alert-success" role="status">{{ messageSucces() }}</div>
+  }
+  @if (messageErreur()) {
+    <div class="alert alert-danger" role="alert">{{ messageErreur() }}</div>
+  }
+
+  <!-- ONGLET 1 : SUIVI DES COMMANDES -->
+  @if (ongletActif() === 'commandes') {
+    <div class="filters-bar bo-card">
+      <div class="filters-grid-cmd">
+        <div class="ctrl-group">
+          <label for="f-client">Client</label>
+          <select id="f-client" [value]="filtreClient()" (change)="filtreClient.set($any($event.target).value)">
+            <option value="">Tous les clients</option>
+            @for (cl of clientsDisponibles(); track cl.id) {
+              <option [value]="cl.id">{{ cl.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="ctrl-group">
+          <label for="f-st-cmd">Statut commande</label>
+          <select id="f-st-cmd" [value]="filtreStatutCmd()" (change)="filtreStatutCmd.set($any($event.target).value)">
+            <option value="">Tous les statuts</option>
+            @for (s of statutsCommande; track s) {
+              <option [value]="s">{{ s }}</option>
+            }
+            <option value="Annulée">Annulée</option>
+          </select>
+        </div>
+
+        <div class="ctrl-group">
+          <label for="f-st-pay">Règlement</label>
+          <select id="f-st-pay" [value]="filtreStatutPay()" (change)="filtreStatutPay.set($any($event.target).value)">
+            <option value="">Tous les règlements</option>
+            @for (p of statutsPaiement; track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="ctrl-group">
+          <label for="f-st-mat">Matériel</label>
+          <select id="f-st-mat" [value]="filtreStatutMat()" (change)="filtreStatutMat.set($any($event.target).value)">
+            <option value="">Tous les états matériel</option>
+            @for (m of statutsMateriel; track m) {
+              <option [value]="m">{{ m }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="filters-actions">
+        <span class="muted-sm">
+          <strong>{{ commandesFiltrees().length }}</strong> commande(s) affichée(s) sur {{ commandes().length }}
+        </span>
+        <div class="ctrl-actions">
+          <button type="button" class="btn-outline-sm" (click)="basculerFiltreCommandes()">
+            {{ activesUniquement() ? 'Inclure terminées / annulées' : 'Uniquement actives' }}
+          </button>
+          <button type="button" class="btn-outline-sm" (click)="reinitialiserFiltresCommandes()">
+            Réinitialiser filtres
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-stack">
+      @for (cmd of commandesFiltrees(); track cmd.commande_id) {
+        <article class="bo-card">
+          <div class="card-top">
+            <div>
+              <strong>{{ cmd.numero_commande }}</strong> — Prestation le {{ cmd.date_prestation | date:'dd/MM/yyyy' }} à {{ cmd.heure_livraison.slice(0, 5) }}
+              <p class="muted-sm">
+                <strong>Client :</strong>
+                @if (cmd.client) {
+                  {{ cmd.client.prenom }} {{ cmd.client.nom }} • {{ cmd.client.email }}
+                  @if (cmd.client.telephone) { • 📞 {{ cmd.client.telephone }} }
+                } @else {
+                  Client #{{ cmd.user_id }}
+                }
+              </p>
+              <p class="muted-sm">Livraison : {{ cmd.adresse_livraison }} ({{ cmd.distance_km }} km)</p>
+            </div>
+            <strong class="price-tag">{{ cmd.prix_total | currency:'EUR':'symbol':'1.2-2' }} TTC</strong>
+          </div>
+
+          <ul class="mini-lines">
+            @for (d of cmd.details; track d.detail_id) {
+              <li>{{ d.menu_titre || ('Menu #' + d.menu_id) }} &times; {{ d.quantite }} convives</li>
+            }
+          </ul>
+
+          @if (cmd.statut === 'Annulée') {
+            <p class="cancel-note">Commande annulée — Motif : {{ cmd.motif_annulation }}</p>
+          } @else {
+            <div class="status-controls">
+              <div class="ctrl-group">
+                <label [for]="'st-cmd-' + cmd.commande_id">Statut commande</label>
+                <div class="next-step-row">
+                  <select #selCmd [id]="'st-cmd-' + cmd.commande_id" [value]="cmd.statut">
+                    @for (s of statutsCommande; track s) {
+                      <option [value]="s" [selected]="cmd.statut === s">{{ s }}</option>
+                    }
+                  </select>
+
+                  @if (getStatutSuivant(cmd.statut); as suivant) {
+                    <button
+                      type="button"
+                      class="btn-next-step"
+                      [disabled]="actionEnCours()"
+                      [title]="'Passer directement à : ' + suivant"
+                      (click)="passerStatutSuivant(cmd)"
+                    >
+                      &rarr; {{ suivant }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <div class="ctrl-group">
+                <label [for]="'st-pay-' + cmd.commande_id">Règlement</label>
+                <select #selPay [id]="'st-pay-' + cmd.commande_id" [value]="cmd.statut_paiement">
+                  @for (p of statutsPaiement; track p) {
+                    <option [value]="p" [selected]="cmd.statut_paiement === p">{{ p }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="ctrl-group">
+                <label [for]="'st-mat-' + cmd.commande_id">Matériel (10j / 600€)</label>
+                <select #selMat [id]="'st-mat-' + cmd.commande_id" [value]="cmd.statut_materiel">
+                  @for (m of statutsMateriel; track m) {
+                    <option [value]="m" [selected]="cmd.statut_materiel === m">{{ m }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="ctrl-actions">
+                <button
+                  type="button"
+                  class="btn-primary-sm"
+                  [disabled]="actionEnCours()"
+                  (click)="mettreAJourStatuts(cmd, selCmd.value, selPay.value, selMat.value)"
+                >
+                  Appliquer
+                </button>
+                <button type="button" class="btn-danger-sm" (click)="ouvrirAnnulationEmploye(cmd.commande_id)">
+                  Annuler
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (commandeAnnulationId() === cmd.commande_id) {
+            <form [formGroup]="cancelEmployeForm" (ngSubmit)="confirmerAnnulationEmploye(cmd.commande_id)" class="inline-panel">
+              <h3>Annulation avec contact client obligatoire</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Mode de contact effectué *</label>
+                  <select formControlName="mode_contact_annulation">
+                    <option value="Téléphone">Téléphone (GSM)</option>
+                    <option value="Email">Email</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Motif d'annulation *</label>
+                  <input type="text" formControlName="motif_annulation" placeholder="Ex : Indisponibilité fournisseur" />
+                </div>
+              </div>
+              <label class="checkbox-inline">
+                <input type="checkbox" formControlName="contact_client_effectue" />
+                Je certifie avoir contacté personnellement le client avant d'annuler cette commande. *
+              </label>
+              <div class="ctrl-actions">
+                <button type="submit" class="btn-danger-sm">Confirmer l'annulation</button>
+                <button type="button" class="btn-outline-sm" (click)="commandeAnnulationId.set(null)">Fermer</button>
+              </div>
+            </form>
+          }
+        </article>
+        
+      } @empty { <p class="muted-sm">Aucune commande ne correspond à ces filtres.</p> 
+        }
+    </div>
+  }
+
+  <!-- ONGLET 2 : GESTION DU CATALOGUE -->
+  @if (ongletActif() === 'catalogue') {
+    <div class="two-cols">
+      <section class="bo-card">
+        <h2>Menus actifs ({{ menus().length }})</h2>
+        <div class="cards-stack">
+          @for (m of menus(); track m.menu_id) {
+            <div class="sub-item">
+              <div>
+                <strong>{{ m.titre }}</strong> ({{ m.prix_par_personne | currency:'EUR':'symbol':'1.2-2' }} / pers. • min. {{ m.nombre_personnes_min }})
+                <p class="muted-sm">Stock : {{ m.quantite_disponible }} • {{ m.themes.length }} thème(s)</p>
+              </div>
+              <button type="button" class="btn-danger-sm" (click)="supprimerMenu(m)">Archiver</button>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="bo-card">
+        <h2>Ajouter un nouveau menu</h2>
+        <form [formGroup]="menuForm" (ngSubmit)="creerMenu()" class="bo-form">
+          <div class="form-group">
+            <label for="m-titre">Titre du menu *</label>
+            <input id="m-titre" type="text" formControlName="titre" />
+          </div>
+
+          <div class="form-row-3">
+            <div class="form-group">
+              <label for="m-prix">Prix / pers. (€) *</label>
+              <input id="m-prix" type="number" step="0.5" formControlName="prix_par_personne" />
+            </div>
+            <div class="form-group">
+              <label for="m-min">Pers. min. *</label>
+              <input id="m-min" type="number" formControlName="nombre_personnes_min" />
+            </div>
+            <div class="form-group">
+              <label for="m-stock">Stock *</label>
+              <input id="m-stock" type="number" formControlName="quantite_disponible" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="m-img">URL de la photo principale *</label>
+            <input id="m-img" type="text" formControlName="images_url" />
+          </div>
+
+          <div class="form-group">
+            <label for="m-desc">Description *</label>
+            <textarea id="m-desc" rows="2" formControlName="description"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Thèmes associés :</label>
+            <div class="chips-wrap">
+              @for (t of referentiels().themes; track t.id) {
+                <button
+                  type="button"
+                  class="chip-btn"
+                  [class.is-selected]="selectedThemeIds().includes(t.id)"
+                  (click)="toggleSelectionId(selectedThemeIds, t.id)"
+                >
+                  {{ t.libelle }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Plats composant le menu :</label>
+            <div class="chips-wrap">
+              @for (p of plats(); track p.plat_id) {
+                <button
+                  type="button"
+                  class="chip-btn"
+                  [class.is-selected]="selectedPlatIds().includes(p.plat_id)"
+                  (click)="toggleSelectionId(selectedPlatIds, p.plat_id)"
+                >
+                  {{ p.type_de_plat }} : {{ p.titre }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary-sm" [disabled]="actionEnCours()">Publier le menu</button>
+        </form>
+      </section>
+    </div>
+    <hr class="section-divider" />
+
+    <!-- SECONDE PARTIE DE L'ONGLET CATALOGUE : GESTION DES PLATS -->
+    <div class="two-cols">
+      <section class="bo-card">
+        <h2>Plats enregistrés ({{ platsFiltres().length }})</h2>
+
+        <div class="plat-filters">
+          <select
+            aria-label="Filtrer les plats par catégorie"
+            [value]="filtreCategoriePlat()"
+            (change)="filtreCategoriePlat.set($any($event.target).value)"
+          >
+            <option value="">Toutes les catégories</option>
+            @for (dt of dishTypes; track dt) {
+              <option [value]="dt">{{ dt }}</option>
+            }
+          </select>
+
+          <input
+            type="search"
+            aria-label="Rechercher un plat par nom"
+            placeholder="Rechercher un plat..."
+            [value]="filtreRecherchePlat()"
+            (input)="filtreRecherchePlat.set($any($event.target).value)"
+          />
+        </div>
+
+        <div class="cards-stack">
+          @for (p of platsFiltres(); track p.plat_id) {
+            <div class="sub-item">
+              <div>
+                <strong>{{ p.titre }}</strong> <span class="status-pill">{{ p.type_de_plat }}</span>
+                <p class="muted-sm">
+                  Allergènes : {{ p.allergenes.length }} • Régimes : {{ p.regimes.length }} • Thèmes : {{ p.themes.length }}
+                </p>
+              </div>
+              <div class="ctrl-actions">
+                <button type="button" class="btn-outline-sm" (click)="editerPlat(p)">Modifier</button>
+                <button type="button" class="btn-danger-sm" (click)="supprimerPlat(p)">Supprimer</button>
+              </div>
+            </div>
+          } @empty {
+            <p class="muted-sm">Aucun plat ne correspond à ce filtre.</p>
+          }
+        </div>
+      </section>
+
+      <section class="bo-card">
+        <h2>{{ platEnEditionId() ? 'Modifier le plat' : 'Ajouter un nouveau plat' }}</h2>
+        <form [formGroup]="platForm" (ngSubmit)="sauvegarderPlat()" class="bo-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="p-titre">Nom du plat *</label>
+              <input id="p-titre" type="text" formControlName="titre" placeholder="Ex : Risotto aux cèpes" />
+            </div>
+
+            <div class="form-group">
+              <label for="p-type">Catégorie *</label>
+              <select id="p-type" formControlName="type_de_plat">
+                @for (dt of dishTypes; track dt) {
+                  <option [value]="dt">{{ dt }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="p-img">URL de la photo (optionnel)</label>
+            <input id="p-img" type="text" formControlName="images_url" />
+          </div>
+
+          <div class="form-group">
+            <label>Allergènes présents (sécurité alimentaire) :</label>
+            <div class="chips-wrap">
+              @for (a of referentiels().allergenes; track a.id) {
+                <button
+                  type="button"
+                  class="chip-btn"
+                  [class.is-selected]="selectedPlatAllergeneIds().includes(a.id)"
+                  (click)="toggleSelectionId(selectedPlatAllergeneIds, a.id)"
+                >
+                  {{ a.libelle }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Régimes alimentaires compatibles :</label>
+            <div class="chips-wrap">
+              @for (r of referentiels().regimes; track r.id) {
+                <button
+                  type="button"
+                  class="chip-btn"
+                  [class.is-selected]="selectedPlatRegimeIds().includes(r.id)"
+                  (click)="toggleSelectionId(selectedPlatRegimeIds, r.id)"
+                >
+                  {{ r.libelle }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Thèmes suggérés :</label>
+            <div class="chips-wrap">
+              @for (t of referentiels().themes; track t.id) {
+                <button
+                  type="button"
+                  class="chip-btn"
+                  [class.is-selected]="selectedPlatThemeIds().includes(t.id)"
+                  (click)="toggleSelectionId(selectedPlatThemeIds, t.id)"
+                >
+                  {{ t.libelle }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="ctrl-actions">
+            <button type="submit" class="btn-primary-sm" [disabled]="actionEnCours()">
+              {{ platEnEditionId() ? 'Enregistrer les modifications' : 'Ajouter le plat' }}
+            </button>
+            @if (platEnEditionId()) {
+              <button type="button" class="btn-outline-sm" (click)="annulerEditionPlat()">Annuler</button>
+            }
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+
+  <!-- ONGLET 3 : MODÉRATION DES AVIS MONGODB -->
+  @if (ongletActif() === 'avis') {
+    <div class="cards-stack">
+      @for (a of avisList(); track a.id) {
+        <article class="bo-card">
+          <div class="card-top">
+            <div>
+              <strong>{{ a.auteur_prenom || 'Client #' + a.user_id }}</strong> — Statut actuel :
+              <span class="status-pill">{{ a.statut }}</span>
+            </div>
+            <span>Qualité {{ a.notes.qualite }}/5 • Service {{ a.notes.service }}/5 • Prix {{ a.notes.prix }}/5</span>
+          </div>
+          <p>« {{ a.description }} »</p>
+          <div class="ctrl-actions">
+            <button type="button" class="btn-primary-sm" (click)="modererAvis(a.id, 'Approuvé')">Approuver (Publier)</button>
+            <button type="button" class="btn-danger-sm" (click)="modererAvis(a.id, 'Rejeté')">Rejeter</button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  <!-- ONGLET 4 : HORAIRES & MESSAGES DE CONTACT -->
+  @if (ongletActif() === 'horaires') {
+    <div class="two-cols">
+      <section class="bo-card">
+        <h2>Horaires d'ouverture (Footer)</h2>
+        <div class="cards-stack">
+          @for (h of horaires(); track h.horaire_id) {
+            <div class="sub-item">
+              <strong>{{ h.jour }}</strong>
+              <div class="ctrl-actions">
+                <input #inpOuv type="time" [value]="h.heure_ouverture.slice(0, 5)" aria-label="Ouverture" />
+                <span>à</span>
+                <input #inpFerm type="time" [value]="h.heure_fermeture.slice(0, 5)" aria-label="Fermeture" />
+                <button type="button" class="btn-primary-sm" (click)="sauvegarderHoraire(h, inpOuv.value, inpFerm.value)">OK</button>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="bo-card">
+        <h2>Messages reçus ({{ contacts().length }})</h2>
+        <div class="cards-stack">
+          @for (c of contacts(); track c.id) {
+            <div class="sub-item">
+              <div>
+                <strong>{{ c.objet }}</strong> — {{ c.prenom }} {{ c.nom }} ({{ c.email }})
+                <p class="muted-sm">{{ c.message }}</p>
+              </div>
+              @if (!c.traite) {
+                <button type="button" class="btn-primary-sm" (click)="marquerTraite(c.id)">Marquer traité</button>
+              } @else {
+                <span class="status-pill">Traité</span>
+              }
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</section>

@@ -1,0 +1,275 @@
+<section class="container client-wrapper" aria-labelledby="client-title">
+  <header class="client-header">
+    <div>
+      <h1 id="client-title">Mon Espace Client</h1>
+      @if (authService.currentUserValue; as user) {
+        <p>Bienvenue, <strong>{{ user.prenom }} {{ user.nom }}</strong> ({{ user.email }})</p>
+      }
+    </div>
+
+    <nav class="tabs-nav" aria-label="Sections de l'espace client">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.is-active]="ongletActif() === 'commandes'"
+        (click)="ongletActif.set('commandes')"
+      >
+        Mes Commandes ({{ commandes().length }})
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.is-active]="ongletActif() === 'profil'"
+        (click)="ongletActif.set('profil')"
+      >
+        Mes Coordonnées &amp; Sécurité
+      </button>
+    </nav>
+  </header>
+
+  @if (messageGlobal()) {
+    <div class="alert alert-success" role="status">{{ messageGlobal() }}</div>
+  }
+  @if (erreurGlobale()) {
+    <div class="alert alert-danger" role="alert">{{ erreurGlobale() }}</div>
+  }
+
+  <!-- ONGLET 1 : HISTORIQUE & SUIVI DES COMMANDES -->
+  @if (ongletActif() === 'commandes') {
+    @if (chargementCommandes()) {
+      <p class="status-text">Chargement de vos commandes...</p>
+    } @else if (commandes().length === 0) {
+      <div class="empty-box">
+        <h2>Aucune commande enregistrée</h2>
+        <p>Découvrez nos menus traiteur pour planifier votre prochain événement.</p>
+        <a routerLink="/catalogue" class="btn-primary">Consulter nos menus</a>
+      </div>
+    } @else {
+      <div class="orders-list">
+        @for (cmd of commandes(); track cmd.commande_id) {
+          <article class="order-card">
+            <div class="order-top">
+              <div>
+                <span class="order-number">{{ cmd.numero_commande }}</span>
+                <p class="order-date">
+                  Prestation prévue le <strong>{{ cmd.date_prestation | date:'dd/MM/yyyy' }}</strong>
+                  à <strong>{{ cmd.heure_livraison.slice(0, 5) }}</strong>
+                </p>
+              </div>
+              <div class="order-total">
+                <strong>{{ cmd.prix_total | currency:'EUR':'symbol':'1.2-2' }}</strong>
+                <span>TTC</span>
+              </div>
+            </div>
+
+            <!-- Frise des 3 statuts métier (Commande, Paiement, Matériel) -->
+            <div class="status-badges">
+              <span class="badge badge-order">Commande : {{ cmd.statut }}</span>
+              <span class="badge badge-payment">Règlement : {{ cmd.statut_paiement }}</span>
+              <span class="badge badge-equipment">Matériel : {{ cmd.statut_materiel }}</span>
+            </div>
+
+            <!-- Alerte contractuelle restitution matériel (RG-04) -->
+            @if (cmd.statut === 'Livrée' && cmd.statut_materiel === 'Inclus') {
+              <div class="material-warning" role="note">
+                ⚠️ <strong>Rappel matériel :</strong> Le matériel prêté doit être restitué sous 10 jours après livraison
+                (pénalité forfaitaire de 600 € en cas de dépassement).
+              </div>
+            }
+
+            <!-- Détail des menus de la commande -->
+            <ul class="order-lines">
+              @for (item of cmd.details; track item.detail_id) {
+                <li>
+                  <span>{{ item.menu_titre || ('Menu #' + item.menu_id) }} &times; {{ item.quantite }} pers.</span>
+                  <span>{{ (item.prix_applique * item.quantite) | currency:'EUR':'symbol':'1.2-2' }}</span>
+                </li>
+              }
+            </ul>
+
+            <p class="order-address">
+              <strong>Livraison :</strong> {{ cmd.adresse_livraison }} ({{ cmd.distance_km }} km — frais : {{ cmd.frais_livraison | currency:'EUR':'symbol':'1.2-2' }})
+            </p>
+
+            @if (cmd.statut === 'Annulée' && cmd.motif_annulation) {
+              <p class="cancel-reason"><strong>Motif d'annulation :</strong> {{ cmd.motif_annulation }}</p>
+            }
+
+            <!-- Boutons d'actions contextuels selon le statut -->
+            <div class="order-actions">
+              @if (cmd.statut === 'En attente de validation') {
+                <button type="button" class="btn-secondary-sm" (click)="ouvrirEdition(cmd)">
+                  Modifier la livraison
+                </button>
+                <button type="button" class="btn-danger-sm" (click)="ouvrirAnnulation(cmd.commande_id)">
+                  Annuler la commande
+                </button>
+              }
+
+              @if (cmd.statut === 'Terminée') {
+                <button type="button" class="btn-primary-sm" (click)="ouvrirAvis(cmd.commande_id)">
+                  ★ Donner mon avis sur cette prestation
+                </button>
+              }
+            </div>
+
+            <!-- Panneau dépliable : Modification avant acceptation -->
+            @if (commandeEnEditionId() === cmd.commande_id) {
+              <form [formGroup]="editOrderForm" (ngSubmit)="soumettreEdition(cmd.commande_id)" class="inline-panel">
+                <h3>Modifier les informations logistiques</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-date">Date *</label>
+                    <input id="edit-date" type="date" formControlName="date_prestation" />
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-time">Heure *</label>
+                    <input id="edit-time" type="time" formControlName="heure_livraison" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="edit-addr">Adresse de livraison *</label>
+                  <input id="edit-addr" type="text" formControlName="adresse_livraison" />
+                </div>
+                <div class="panel-btns">
+                  <button type="submit" class="btn-primary-sm" [disabled]="actionEnCours()">Enregistrer</button>
+                  <button type="button" class="btn-ghost-sm" (click)="fermerPanneauxCommande()">Fermer</button>
+                </div>
+              </form>
+            }
+
+            <!-- Panneau dépliable : Annulation avant acceptation -->
+            @if (commandeEnAnnulationId() === cmd.commande_id) {
+              <form [formGroup]="cancelOrderForm" (ngSubmit)="soumettreAnnulation(cmd.commande_id)" class="inline-panel">
+                <h3>Confirmer l'annulation de la commande</h3>
+                <div class="form-group">
+                  <label for="cancel-reason">Motif de l'annulation *</label>
+                  <input id="cancel-reason" type="text" formControlName="motif_annulation" placeholder="Ex : Report de l'événement" />
+                </div>
+                <div class="panel-btns">
+                  <button type="submit" class="btn-danger-sm" [disabled]="actionEnCours()">Confirmer l'annulation</button>
+                  <button type="button" class="btn-ghost-sm" (click)="fermerPanneauxCommande()">Conserver ma commande</button>
+                </div>
+              </form>
+            }
+
+            <!-- Panneau dépliable : Dépôt d'avis multicritère -->
+            @if (commandeEnAvisId() === cmd.commande_id) {
+              <form [formGroup]="avisForm" (ngSubmit)="soumettreAvis(cmd.commande_id)" class="inline-panel">
+                <h3>Évaluer votre prestation ({{ cmd.numero_commande }})</h3>
+                <div class="ratings-grid">
+                  <div class="form-group">
+                    <label for="note-qualite">Qualité des plats (1-5)</label>
+                    <select id="note-qualite" formControlName="qualite">
+                      <option [ngValue]="5">5 - Excellent</option>
+                      <option [ngValue]="4">4 - Bien</option>
+                      <option [ngValue]="3">3 - Correct</option>
+                      <option [ngValue]="2">2 - À améliorer</option>
+                      <option [ngValue]="1">1 - Critique</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="note-service">Service &amp; ponctualité (1-5)</label>
+                    <select id="note-service" formControlName="service">
+                      <option [ngValue]="5">5 - Excellent</option>
+                      <option [ngValue]="4">4 - Bien</option>
+                      <option [ngValue]="3">3 - Correct</option>
+                      <option [ngValue]="2">2 - À améliorer</option>
+                      <option [ngValue]="1">1 - Critique</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="note-prix">Rapport qualité / prix (1-5)</label>
+                    <select id="note-prix" formControlName="prix">
+                      <option [ngValue]="5">5 - Excellent</option>
+                      <option [ngValue]="4">4 - Bien</option>
+                      <option [ngValue]="3">3 - Correct</option>
+                      <option [ngValue]="2">2 - À améliorer</option>
+                      <option [ngValue]="1">1 - Critique</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="avis-desc">Votre commentaire *</label>
+                  <textarea id="avis-desc" rows="3" formControlName="description" placeholder="Partagez votre expérience avec Vite & Gourmand..."></textarea>
+                </div>
+                <div class="panel-btns">
+                  <button type="submit" class="btn-primary-sm" [disabled]="actionEnCours()">Publier mon avis</button>
+                  <button type="button" class="btn-ghost-sm" (click)="fermerPanneauxCommande()">Annuler</button>
+                </div>
+              </form>
+            }
+          </article>
+        }
+      </div>
+    }
+  }
+
+  <!-- ONGLET 2 : PROFIL & MOT DE PASSE -->
+  @if (ongletActif() === 'profil') {
+    <div class="profile-grid">
+      <section class="card" aria-labelledby="profil-heading">
+        <h2 id="profil-heading">Mes informations personnelles</h2>
+        <form [formGroup]="profilForm" (ngSubmit)="sauvegarderProfil()" class="profile-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="p-prenom">Prénom *</label>
+              <input id="p-prenom" type="text" formControlName="prenom" />
+            </div>
+            <div class="form-group">
+              <label for="p-nom">Nom *</label>
+              <input id="p-nom" type="text" formControlName="nom" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="p-tel">Téléphone</label>
+            <input id="p-tel" type="tel" formControlName="telephone" />
+          </div>
+
+          <div class="form-group">
+            <label for="p-addr">Adresse habituelle</label>
+            <input id="p-addr" type="text" formControlName="adresse" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="p-cp">Code postal</label>
+              <input id="p-cp" type="text" formControlName="code_postal" />
+            </div>
+            <div class="form-group">
+              <label for="p-ville">Ville</label>
+              <input id="p-ville" type="text" formControlName="ville" />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" [disabled]="actionEnCours()">
+            Enregistrer mes coordonnées
+          </button>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="pwd-heading">
+        <h2 id="pwd-heading">Modifier mon mot de passe</h2>
+        <form [formGroup]="passwordForm" (ngSubmit)="changerMotDePasse()" class="profile-form">
+          <div class="form-group">
+            <label for="old-pwd">Mot de passe actuel *</label>
+            <input id="old-pwd" type="password" formControlName="ancien_password" autocomplete="current-password" />
+          </div>
+
+          <div class="form-group">
+            <label for="new-pwd">Nouveau mot de passe *</label>
+            <input id="new-pwd" type="password" formControlName="nouveau_password" autocomplete="new-password" />
+            <small class="hint-text">
+              10 caractères minimum, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.
+            </small>
+          </div>
+
+          <button type="submit" class="btn-primary" [disabled]="actionEnCours()">
+            Mettre à jour le mot de passe
+          </button>
+        </form>
+      </section>
+    </div>
+  }
+</section>

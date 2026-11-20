@@ -1,0 +1,172 @@
+<section class="container panier-wrapper" aria-labelledby="panier-title">
+  <header class="panier-header">
+    <h1 id="panier-title">Votre Panier &amp; Devis Traiteur</h1>
+    <p>Ajustez le nombre de convives et renseignez les informations de livraison pour obtenir votre devis instantané.</p>
+  </header>
+
+  @if (erreurMessage()) {
+    <div class="alert-danger" role="alert">{{ erreurMessage() }}</div>
+  }
+
+  @if (commandeConfirmee(); as cmd) {
+      <div class="confirmation-card" role="status">
+        <span class="confirm-badge">Commande enregistrée avec succès</span>
+        <h2>Merci pour votre commande n° {{ cmd.numero_commande }} !</h2>
+        <p>
+          Votre demande de prestation pour le <strong>{{ cmd.date_prestation | date:'dd/MM/yyyy' }}</strong>
+          à <strong>{{ cmd.heure_livraison.slice(0, 5) }}</strong> est désormais au statut
+          <strong>« {{ cmd.statut }} »</strong>.
+        </p>
+        <p class="confirm-total">
+          Montant total TTC : <strong>{{ cmd.prix_total | currency:'EUR':'symbol':'1.2-2' }}</strong>
+          (frais de livraison inclus : {{ cmd.frais_livraison | currency:'EUR':'symbol':'1.2-2' }}).
+        </p>
+        <div class="confirm-actions">
+          <a routerLink="/mon-compte" class="btn-primary">Suivre ma commande dans Mon Espace</a>
+          <a routerLink="/catalogue" class="btn-secondary-outline">Retourner au catalogue</a>
+        </div>
+      </div>
+    } @else if (items().length === 0) {
+      <div class="empty-cart">
+        <h2>Votre panier est actuellement vide</h2>
+        <p>Parcourez notre carte événementielle pour sélectionner un ou plusieurs menus.</p>
+        <a routerLink="/catalogue" class="btn-primary">Explorer nos menus</a>
+      </div>
+    } @else {
+    <div class="panier-layout">
+      <!-- Colonne gauche : Articles du panier & Logistique -->
+      <div class="panier-main">
+        <section class="card" aria-labelledby="items-heading">
+          <h2 id="items-heading">1. Menus sélectionnés</h2>
+          <div class="cart-items">
+            @for (item of items(); track item.menu_id) {
+              <div class="cart-item">
+                <div class="item-info">
+                  <h3>{{ item.titre }}</h3>
+                  <p class="item-unit">
+                    {{ item.prix_par_personne | currency:'EUR':'symbol':'1.2-2' }} / pers.
+                    (min. {{ item.nombre_personnes_min }} pers.)
+                  </p>
+                  @if (item.quantite >= item.nombre_personnes_min + 5) {
+                    <span class="promo-badge">Remise volume -10 % appliquée</span>
+                  }
+                </div>
+
+                <div class="item-controls">
+                  <label [for]="'qty-' + item.menu_id" class="sr-only">Nombre de convives pour {{ item.titre }}</label>
+                  <input
+                    [id]="'qty-' + item.menu_id"
+                    type="number"
+                    [min]="item.nombre_personnes_min"
+                    [max]="item.quantite_disponible"
+                    [value]="item.quantite"
+                    (change)="modifierQuantite(item.menu_id, $any($event.target).value)"
+                  />
+                  <span class="item-subtotal">
+                    {{ (item.prix_par_personne * item.quantite) | currency:'EUR':'symbol':'1.2-2' }}
+                  </span>
+                  <button type="button" class="btn-remove" (click)="retirerMenu(item.menu_id)" aria-label="Retirer ce menu">
+                    ✕
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+          <a routerLink="/catalogue" class="add-more-link">+ Ajouter un autre menu</a>
+        </section>
+
+        <section class="card" aria-labelledby="delivery-heading">
+          <h2 id="delivery-heading">2. Date &amp; Livraison de la prestation</h2>
+          <form [formGroup]="deliveryForm" class="delivery-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="date_prestation">Date de l'événement *</label>
+                <input id="date_prestation" type="date" [min]="minDatePrestation" formControlName="date_prestation" />
+              </div>
+
+              <div class="form-group">
+                <label for="heure_livraison">Heure souhaitée *</label>
+                <input id="heure_livraison" type="time" formControlName="heure_livraison" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="adresse_livraison">Adresse complète de livraison *</label>
+              <input
+                id="adresse_livraison"
+                type="text"
+                formControlName="adresse_livraison"
+                placeholder="Ex : 24 Quai des Chartrons, 33000 Bordeaux"
+              />
+              @if (deliveryForm.controls.adresse_livraison.touched && deliveryForm.controls.adresse_livraison.invalid) {
+                <small class="error-text">Veuillez indiquer une adresse de livraison valide (5 caractères min.).</small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="distance_km">Distance depuis Bordeaux centre (km) *</label>
+              <input id="distance_km" type="number" min="0" step="0.5" formControlName="distance_km" />
+              <small class="hint-text">
+                Forfait livraison : 5,00 € + 0,59 €/km (indiquez 0 km pour une livraison sur Bordeaux intra-muros).
+              </small>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <!-- Colonne droite : Récapitulatif financier (Devis RG-01 à RG-03) -->
+      <aside class="panier-summary" aria-labelledby="quote-heading">
+        <div class="card summary-card">
+          <h2 id="quote-heading">Récapitulatif du devis</h2>
+
+          @if (calculEnCours()) {
+            <p class="muted">Calcul du tarif en cours...</p>
+          } @else if (devis(); as q) {
+            <dl class="quote-lines">
+              <div class="quote-line">
+                <dt>Sous-total menus (RG-01)</dt>
+                <dd>{{ q.sous_total_brut | currency:'EUR':'symbol':'1.2-2' }}</dd>
+              </div>
+
+              @if (q.remise_appliquee > 0) {
+                <div class="quote-line discount">
+                  <dt>Remise volume 10 % (RG-02)</dt>
+                  <dd>- {{ q.remise_appliquee | currency:'EUR':'symbol':'1.2-2' }}</dd>
+                </div>
+              }
+
+              <div class="quote-line">
+                <dt>Frais de livraison (RG-03)</dt>
+                <dd>{{ q.frais_livraison | currency:'EUR':'symbol':'1.2-2' }}</dd>
+              </div>
+
+              <div class="quote-total">
+                <dt>Total TTC</dt>
+                <dd>{{ q.prix_total | currency:'EUR':'symbol':'1.2-2' }}</dd>
+              </div>
+            </dl>
+          }
+
+          <p class="rg-note">
+            Prêt du matériel de service inclus. Le règlement s'effectue après validation de votre commande par notre équipe.
+          </p>
+
+          @if (authService.isAuthenticated) {
+            <button
+              type="button"
+              class="btn-validate"
+              [disabled]="validationEnCours() || deliveryForm.invalid"
+              (click)="validerCommande()"
+            >
+              {{ validationEnCours() ? 'Enregistrement...' : 'Confirmer ma commande' }}
+            </button>
+          } @else {
+            <a routerLink="/connexion" [queryParams]="{ returnUrl: '/panier' }" class="btn-validate btn-link">
+              Se connecter pour valider la commande
+            </a>
+          }
+        </div>
+      </aside>
+    </div>
+  }
+</section>

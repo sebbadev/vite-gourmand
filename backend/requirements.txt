@@ -1,0 +1,29 @@
+# Serveur ASGI & Framework Web
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+
+# Validation de données & Typage
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+email-validator>=2.2.0
+
+# Persistance Relationnelle (PostgreSQL)
+sqlalchemy>=2.0.36
+psycopg2-binary>=2.9.10
+alembic>=1.14.0
+
+# Persistance NoSQL (MongoDB asynchrone)
+motor>=3.6.0
+certifi>=2024.0.0
+
+# Sécurité, Hachage & Tokens JWT
+bcrypt>=4.0.1
+pyjwt>=2.8.0
+python-multipart>=0.0.12
+
+# Gestion de l'environnement (.env)
+python-dotenv>=1.0.1
+
+# Environnement de tests
+pytest>=8.0.0
+httpx2>=0.1.0
